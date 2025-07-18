@@ -1,12 +1,12 @@
 use crate::error::TestudoBondsError;
-use crate::state::Bond;
+use crate::state::{Bond, UserAccount};
 use solana_program::program_pack::Pack;
 use solana_program::system_program::ID as system_program;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_associated_token_account::ID as associated_token_program;
+use spl_associated_token_account::{get_associated_token_address, ID as associated_token_program};
 use spl_token::state::Account as TokenAccount;
 use spl_token::ID as token_program;
 use spl_token_2022::ID as token_2022_program;
@@ -236,4 +236,15 @@ pub fn assert_valid_bond(bond_pda_data: &Bond, user_pda_data: &UserAccount) -> P
     } else {
         Ok(())
     }
+}
+
+pub fn assert_valid_token_account(
+    account_name: &str,
+    account: &Pubkey,
+    mint: &Pubkey,
+    token_account: &AccountInfo,
+) -> ProgramResult {
+    let expected_token_account: Pubkey = get_associated_token_address(account, mint);
+    assert_same_pubkeys(account_name, token_account, &expected_token_account)?;
+    Ok(())
 }

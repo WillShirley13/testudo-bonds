@@ -67,7 +67,7 @@ pub fn realloc_account<'a>(
         transfer_lamports_from_pdas(target_account, funding_account, lamports_diff)?;
     }
 
-    target_account.realloc(new_size, false)
+    target_account.resize(new_size)
 }
 
 /// Close an account.
@@ -83,7 +83,7 @@ pub fn close_account<'a>(
     **target_account.lamports.borrow_mut() = 0;
 
     target_account.assign(&system_program::ID);
-    target_account.realloc(0, false)
+    target_account.resize(0)
 }
 
 /// Transfer lamports.

@@ -1,4 +1,4 @@
-use solana_program::{entrypoint::ProgramResult, program_error::ProgramError};
+use solana_program::program_error::ProgramError;
 
 use crate::{constants::SHELLS_PER_TESTUDO, error::TestudoBondsError};
 
@@ -7,6 +7,8 @@ pub fn calculate_reward(
     current_timestamp: &i64,
     daily_emission: u64,
     claim_penalty: u16,
+    max_emission_per_bond: u64,
+    total_claimed: u64,
 ) -> Result<u64, ProgramError> {
     let seconds_elapsed = (current_timestamp - previous_claim_timestamp) as u64;
     let seconds_per_day = 86400u64;
@@ -21,12 +23,17 @@ pub fn calculate_reward(
     if reward == 0 {
         return Err(TestudoBondsError::NoRewardsToClaim.into());
     }
-    let reward_with_penalty = calculate_claim_penalty(
+    let mut reward_with_penalty = calculate_claim_penalty(
         previous_claim_timestamp,
         current_timestamp,
         &claim_penalty,
         &reward,
     )?;
+
+    // Assert reward is not greater than max emission per bond
+    if reward_with_penalty + total_claimed > max_emission_per_bond {
+        reward_with_penalty = max_emission_per_bond - total_claimed;
+    }
 
     Ok(reward_with_penalty)
 }

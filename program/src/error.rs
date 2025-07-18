@@ -55,6 +55,15 @@ pub enum TestudoBondsError {
     /// 16 - Bond not active
     #[error("Bond not active")]
     BondNotActive,
+    /// 17 - Max bonds reached
+    #[error("Max bonds reached")]
+    MaxBondsReached,
+    /// 18 - Bond operations paused
+    #[error("Bond operations paused")]
+    BondOperationsPaused,
+    /// 19 - Bond is active
+    #[error("Bond is active")]
+    BondIsActive,
 }
 
 impl From<TestudoBondsError> for ProgramError {

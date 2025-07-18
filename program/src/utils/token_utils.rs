@@ -2,8 +2,6 @@ use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    pubkey::Pubkey,
 };
 use spl_associated_token_account::instruction::create_associated_token_account;
 use spl_token::instruction::transfer_checked;

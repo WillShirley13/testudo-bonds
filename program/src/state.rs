@@ -22,10 +22,11 @@ pub struct Admin {
     pub max_bonds_per_wallet: u8,
     pub token_deposit_split: [u16; 3], // [rewards pool, treasury, team] in basis points
     pub claim_penalty: u16,            // basis points. e.g. 500 = 5%
+    pub pause_bond_operations: bool,
 }
 
 impl Admin {
-    pub const SIZE: usize = 32 + 32 + 32 + 32 + 32 + 8 + 8 + 1 + (3 * 2) + 2;
+    pub const SIZE: usize = 32 + 32 + 32 + 32 + 32 + 8 + 8 + 1 + (3 * 2) + 2 + 1;
 }
 
 impl Serialization<Admin> for Admin {
