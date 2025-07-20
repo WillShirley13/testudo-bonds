@@ -1,14 +1,8 @@
 use crate::error::TestudoBondsError;
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction, system_program,
-    sysvar::Sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::{invoke, invoke_signed}, program_error::ProgramError, pubkey::Pubkey, rent::Rent, sysvar::Sysvar, system_program::ID as system_program_id
 };
+use solana_system_interface::instruction;
 
 /// Create a new account from the given size.
 #[inline(always)]
@@ -24,7 +18,7 @@ pub fn create_account<'a>(
     let lamports: u64 = rent.minimum_balance(size);
 
     invoke_signed(
-        &system_instruction::create_account(
+        &instruction::create_account(
             funding_account.key,
             target_account.key,
             lamports,
@@ -56,7 +50,7 @@ pub fn realloc_account<'a>(
 
     if new_minimum_balance > old_minimum_balance {
         invoke(
-            &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
+            &instruction::transfer(funding_account.key, target_account.key, lamports_diff),
             &[
                 funding_account.clone(),
                 target_account.clone(),
@@ -82,7 +76,7 @@ pub fn close_account<'a>(
         .unwrap();
     **target_account.lamports.borrow_mut() = 0;
 
-    target_account.assign(&system_program::ID);
+    target_account.assign(&system_program_id);
     target_account.resize(0)
 }
 
@@ -95,7 +89,7 @@ pub fn transfer_lamports<'a>(
     signer_seeds: Option<&[&[&[u8]]]>,
 ) -> ProgramResult {
     invoke_signed(
-        &system_instruction::transfer(from.key, to.key, lamports),
+        &instruction::transfer(from.key, to.key, lamports),
         &[from.clone(), to.clone()],
         signer_seeds.unwrap_or(&[]),
     )

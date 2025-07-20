@@ -1,15 +1,21 @@
 #![cfg(feature = "test-sbf")]
 
-use testudo_testudo_bonds_client::{accounts::Counter, instructions::CreateBuilder};
 use borsh::BorshDeserialize;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{signature::Signer, transaction::Transaction};
+use testudo_testudo_bonds_client::{
+    accounts::Counter, instructions::CreateBuilder,
+};
 
 #[tokio::test]
 async fn create() {
-    let mut context = ProgramTest::new("testudo_testudo_bonds", testudo_testudo_bonds_client::ID, None)
-        .start_with_context()
-        .await;
+    let mut context = ProgramTest::new(
+        "testudo_testudo_bonds",
+        testudo_testudo_bonds_client::ID,
+        None,
+    )
+    .start_with_context()
+    .await;
 
     // Given a PDA derived from the payer's public key.
 
@@ -33,7 +39,8 @@ async fn create() {
 
     // Then an account was created with the correct data.
 
-    let account = context.banks_client.get_account(address).await.unwrap();
+    let account =
+        context.banks_client.get_account(address).await.unwrap();
 
     assert!(account.is_some());
 

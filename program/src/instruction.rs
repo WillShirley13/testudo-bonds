@@ -7,13 +7,13 @@ use crate::state::Admin;
 #[rustfmt::skip]
 pub enum TestudoBondsInstruction {
     /// Creates the global admin account.
-    #[account(0, writable, name="global_admin", desc = "The program derived address of the global admin account to create (seeds: ['global_admin', program_id])")]
+    #[account(0, writable, name="global_admin", desc = "The program derived address of the global admin account to create (seeds: ['global_admin'])")]
     #[account(1, signer, name="authority", desc = "The authority of the global admin")]
-    #[account(2, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
-    #[account(3, signer, name="treasury", desc = "The treasury account")]
-    #[account(4, name="treasury_ata", desc = "The token account of the treasury")]
-    #[account(5, signer, name="team", desc = "The team account")]
-    #[account(6, name="team_ata", desc = "The token account of the team")]
+    #[account(2, writable, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
+    #[account(3, name="treasury", desc = "The treasury account")]
+    #[account(4, writable, name="treasury_ata", desc = "The token account of the treasury")]
+    #[account(5, name="team", desc = "The team account")]
+    #[account(6, writable, name="team_ata", desc = "The token account of the team")]
     #[account(7, name="native_token_mint", desc = "The native token mint")]
     #[account(8, name="system_program", desc = "The system program")]
     #[account(9, name="token_program", desc = "The token program")]
@@ -21,35 +21,35 @@ pub enum TestudoBondsInstruction {
     InitializeAdmin,
 
     /// Creates a new user account.
-    #[account(0, writable, name="user_pda", desc = "The program derived address of the user account to create (seeds: ['user_pda', wallet_pubkey, program_id])")]
+    #[account(0, writable, name="user_pda", desc = "The program derived address of the user account to create (seeds: ['user', wallet_pubkey])")]
     #[account(1, signer, name="user_wallet", desc = "The wallet of the user")]
     #[account(2, name="system_program", desc = "The system program")]
     CreateUser,
 
     /// Creates a new bond account.
-    #[account(0, writable, name="bond", desc = "The program derived address of the bond account to create (seeds: ['bond', user_pda, bond_index, program_id])")]
+    #[account(0, writable, name="bond", desc = "The program derived address of the bond account to create (seeds: ['bond', user_pda, bond_index])")]
     #[account(1, signer, name="user_wallet", desc = "The wallet of the user")]
-    #[account(2, name="user_pda", desc = "The user's pda")]
+    #[account(2, writable, name="user_pda", desc = "The user's pda")]
     #[account(3, name="global_admin", desc = "The global admin account")]
-    #[account(4, name="user_wallet_ata", desc = "The user's wallet token account")]
-    #[account(5, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
-    #[account(6, name="treasury_ata", desc = "The token account of the treasury")]
-    #[account(7, name="team_ata", desc = "The token account of the team")]
+    #[account(4, writable, name="user_wallet_ata", desc = "The user's wallet token account")]
+    #[account(5, writable, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
+    #[account(6, writable, name="treasury_ata", desc = "The token account of the treasury")]
+    #[account(7, writable, name="team_ata", desc = "The token account of the team")]
     #[account(8, name="native_token_mint", desc = "The native token mint")]
-    #[account(9, name="token_program", desc = "The token program")]
-    #[account(10, name="system_program", desc = "The system program")]
+    #[account(9, name="system_program", desc = "The system program")]
+    #[account(10, name="token_program", desc = "The token program")]
     InitializeBond,
 
     /// Claims rewards from a bond.
-    #[account(0, writable, name="bond", desc = "The program derived address of the bond account to claim rewards from (seeds: ['bond', user_pda, bond_index, program_id])")]
+    #[account(0, writable, name="bond", desc = "The program derived address of the bond account to claim rewards from (seeds: ['bond', user_pda, bond_index])")]
     #[account(1, signer, name="user_wallet", desc = "The wallet of the user")]
-    #[account(2, name="user_pda", desc = "The user's pda")]
-    #[account(3, name="user_wallet_ata", desc = "The user's wallet token account")]
+    #[account(2, writable, name="user_pda", desc = "The user's pda")]
+    #[account(3, writable, name="user_wallet_ata", desc = "The user's wallet token account")]
     #[account(4, name="global_admin", desc = "The global admin account")]
-    #[account(5, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
-    #[account(6, name="treasury_ata", desc = "The token account of the treasury")]
-    #[account(7, name="team_ata", desc = "The token account of the team")]
-    #[account(8, writable, name="new_bond_pda", desc = "The program derived address for the new bond to be auto-compounded (seeds: ['bond', user_pda, next_bond_index, program_id])")]
+    #[account(5, writable, name="rewards_pool_ata", desc = "The rewards pool (token account) of the global admin")]
+    #[account(6, writable, name="treasury_ata", desc = "The token account of the treasury")]
+    #[account(7, writable, name="team_ata", desc = "The token account of the team")]
+    #[account(8, writable, name="new_bond_pda", desc = "The program derived address for the new bond to be auto-compounded (seeds: ['bond', user_pda, next_bond_index])")]
     #[account(9, name="native_token_mint", desc = "The native token mint")]
     #[account(10, name="token_program", desc = "The token program")]
     #[account(11, name="associated_token_program", desc = "The associated token program (for the rewards pool)")]
@@ -60,7 +60,7 @@ pub enum TestudoBondsInstruction {
     },
 
     /// Updates the admin data.
-    #[account(0, writable, name="global_admin", desc = "The program derived address of the global admin account to update (seeds: ['global_admin', program_id])")]
+    #[account(0, writable, name="global_admin", desc = "The program derived address of the global admin account to update (seeds: ['global_admin'])")]
     #[account(1, signer, name="authority", desc = "The authority of the global admin")]
     UpdateAdmin,
 }

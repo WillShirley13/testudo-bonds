@@ -29,12 +29,18 @@
     "@codama/renderers-rust": "^1.0.0",
     "@iarna/toml": "^2.2.5",
     "@metaplex-foundation/shank-js": "^0.1.7",
+    "@types/node": "^24.0.15",
+    "ava": "^6.4.1",
     "codama": "^1.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.2",
     "zx": "^7.2.3"
   },
   "engines": {
     "node": ">=v20.0.0"
   },
-  "packageManager": "pnpm@9.1.0"
+  "packageManager": "pnpm@9.1.0",
+  "dependencies": {
+    "@solana-program/system": "^0.7.0"
+  }
 }

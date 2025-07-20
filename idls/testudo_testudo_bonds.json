@@ -1,0 +1,651 @@
+{
+  "version": "0.0.0",
+  "name": "testudo_testudo_bonds",
+  "instructions": [
+    {
+      "name": "InitializeAdmin",
+      "accounts": [
+        {
+          "name": "globalAdmin",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the global admin account to create (seeds: ['global_admin'])"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the global admin"
+          ]
+        },
+        {
+          "name": "rewardsPoolAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The rewards pool (token account) of the global admin"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The treasury account"
+          ]
+        },
+        {
+          "name": "treasuryAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the treasury"
+          ]
+        },
+        {
+          "name": "team",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The team account"
+          ]
+        },
+        {
+          "name": "teamAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the team"
+          ]
+        },
+        {
+          "name": "nativeTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The native token mint"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateUser",
+      "accounts": [
+        {
+          "name": "userPda",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the user account to create (seeds: ['user', wallet_pubkey])"
+          ]
+        },
+        {
+          "name": "userWallet",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The wallet of the user"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "InitializeBond",
+      "accounts": [
+        {
+          "name": "bond",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the bond account to create (seeds: ['bond', user_pda, bond_index])"
+          ]
+        },
+        {
+          "name": "userWallet",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The wallet of the user"
+          ]
+        },
+        {
+          "name": "userPda",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The user's pda"
+          ]
+        },
+        {
+          "name": "globalAdmin",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The global admin account"
+          ]
+        },
+        {
+          "name": "userWalletAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The user's wallet token account"
+          ]
+        },
+        {
+          "name": "rewardsPoolAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The rewards pool (token account) of the global admin"
+          ]
+        },
+        {
+          "name": "treasuryAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the treasury"
+          ]
+        },
+        {
+          "name": "teamAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the team"
+          ]
+        },
+        {
+          "name": "nativeTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The native token mint"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "ProcessClaim",
+      "accounts": [
+        {
+          "name": "bond",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the bond account to claim rewards from (seeds: ['bond', user_pda, bond_index])"
+          ]
+        },
+        {
+          "name": "userWallet",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The wallet of the user"
+          ]
+        },
+        {
+          "name": "userPda",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The user's pda"
+          ]
+        },
+        {
+          "name": "userWalletAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The user's wallet token account"
+          ]
+        },
+        {
+          "name": "globalAdmin",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The global admin account"
+          ]
+        },
+        {
+          "name": "rewardsPoolAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The rewards pool (token account) of the global admin"
+          ]
+        },
+        {
+          "name": "treasuryAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the treasury"
+          ]
+        },
+        {
+          "name": "teamAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account of the team"
+          ]
+        },
+        {
+          "name": "newBondPda",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address for the new bond to be auto-compounded (seeds: ['bond', user_pda, next_bond_index])"
+          ]
+        },
+        {
+          "name": "nativeTokenMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The native token mint"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program (for the rewards pool)"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "bondIndex",
+          "type": "u8"
+        },
+        {
+          "name": "autoCompound",
+          "type": "bool"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "UpdateAdmin",
+      "accounts": [
+        {
+          "name": "globalAdmin",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The program derived address of the global admin account to update (seeds: ['global_admin'])"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the global admin"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Admin",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasury",
+            "type": "publicKey"
+          },
+          {
+            "name": "team",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardsPool",
+            "type": "publicKey"
+          },
+          {
+            "name": "nativeTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "dailyEmissionRate",
+            "type": "u64"
+          },
+          {
+            "name": "maxEmissionPerBond",
+            "type": "u64"
+          },
+          {
+            "name": "maxBondsPerWallet",
+            "type": "u8"
+          },
+          {
+            "name": "tokenDepositSplit",
+            "type": {
+              "array": [
+                "u16",
+                3
+              ]
+            }
+          },
+          {
+            "name": "claimPenalty",
+            "type": "u16"
+          },
+          {
+            "name": "pauseBondOperations",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "publicKey"
+          },
+          {
+            "name": "bondCount",
+            "type": "u8"
+          },
+          {
+            "name": "totalAccruedRewards",
+            "type": "u64"
+          },
+          {
+            "name": "activeBonds",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "u8",
+                  "publicKey"
+                ]
+              }
+            }
+          },
+          {
+            "name": "bondIndex",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bond",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "bondIndex",
+            "type": "u8"
+          },
+          {
+            "name": "creationTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "lastClaimTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "totalClaimed",
+            "type": "u64"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "ProcessClaimPayload",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bondIndex",
+            "type": "u8"
+          },
+          {
+            "name": "autoCompound",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateAdminPayload",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "newAdminData",
+            "type": {
+              "defined": "Admin"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "DeserializationError",
+      "msg": "Error deserializing an account"
+    },
+    {
+      "code": 1,
+      "name": "SerializationError",
+      "msg": "Error serializing an account"
+    },
+    {
+      "code": 2,
+      "name": "InvalidProgramOwner",
+      "msg": "Invalid program owner. This likely mean the provided account does not exist"
+    },
+    {
+      "code": 3,
+      "name": "InvalidPda",
+      "msg": "Invalid PDA derivation"
+    },
+    {
+      "code": 4,
+      "name": "ExpectedEmptyAccount",
+      "msg": "Expected empty account"
+    },
+    {
+      "code": 5,
+      "name": "ExpectedNonEmptyAccount",
+      "msg": "Expected non empty account"
+    },
+    {
+      "code": 6,
+      "name": "ExpectedSignerAccount",
+      "msg": "Expected signer account"
+    },
+    {
+      "code": 7,
+      "name": "ExpectedWritableAccount",
+      "msg": "Expected writable account"
+    },
+    {
+      "code": 8,
+      "name": "AccountMismatch",
+      "msg": "Account mismatch"
+    },
+    {
+      "code": 9,
+      "name": "InvalidAccountKey",
+      "msg": "Invalid account key"
+    },
+    {
+      "code": 10,
+      "name": "NumericalOverflow",
+      "msg": "Numerical overflow"
+    },
+    {
+      "code": 11,
+      "name": "InsufficientTokens",
+      "msg": "Insufficient native tokens"
+    },
+    {
+      "code": 12,
+      "name": "InvalidBondIndex",
+      "msg": "Invalid bond index"
+    },
+    {
+      "code": 13,
+      "name": "InvalidTokenAccounts",
+      "msg": "Invalid token accounts"
+    },
+    {
+      "code": 14,
+      "name": "NoRewardsToClaim",
+      "msg": "No rewards to claim"
+    },
+    {
+      "code": 15,
+      "name": "InsufficientRewards",
+      "msg": "Insufficient rewards"
+    },
+    {
+      "code": 16,
+      "name": "BondNotActive",
+      "msg": "Bond not active"
+    },
+    {
+      "code": 17,
+      "name": "MaxBondsReached",
+      "msg": "Max bonds reached"
+    },
+    {
+      "code": 18,
+      "name": "BondOperationsPaused",
+      "msg": "Bond operations paused"
+    },
+    {
+      "code": 19,
+      "name": "BondIsActive",
+      "msg": "Bond is active"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "AV5obcm5Yavs4EebSrmonAAy2K83NZZK88gUn77wmK2",
+    "binaryVersion": "0.4.3",
+    "libVersion": "0.4.3"
+  }
+}

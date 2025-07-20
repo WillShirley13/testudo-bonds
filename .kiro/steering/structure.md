@@ -1,55 +1,103 @@
 # Project Structure
 
-## Root Level
-- `program/` - Main Solana program source code
-- `clients/` - Generated client libraries (JS and Rust)
-- `scripts/` - Build, test, and development automation scripts
-- `ARCHITECTURE.md` - Detailed technical architecture documentation
-- `Cargo.toml` - Workspace configuration for Rust projects
+## Root Level Organization
+
+```
+testudo-bonds/
+├── program/           # Solana program (Rust)
+├── clients/           # Generated client libraries
+│   ├── js/           # JavaScript/TypeScript client
+│   └── rust/         # Rust client
+├── scripts/          # Build and development scripts
+├── .kiro/            # Kiro configuration and steering
+└── target/           # Rust build artifacts
+```
 
 ## Program Structure (`program/`)
+
 ```
-program/
-├── src/
-│   ├── lib.rs          # Program entry point and exports
-│   ├── entrypoint.rs   # Solana program entrypoint
-│   ├── processor.rs    # Main instruction processing logic
-│   ├── instruction.rs  # Instruction definitions and parsing
-│   ├── state.rs        # Account state structures and PDAs
-│   ├── error.rs        # Custom error definitions
-│   ├── assertions.rs   # Validation and assertion helpers
-│   └── utils.rs        # Utility functions
-├── Cargo.toml          # Program dependencies and metadata
-└── keypair.json        # Program keypair for deployment
+program/src/
+├── lib.rs            # Program entry point and module declarations
+├── entrypoint.rs     # Solana program entrypoint
+├── processor.rs      # Instruction processing logic
+├── instruction.rs    # Instruction definitions
+├── state.rs          # Account state structures (Admin, UserAccount, Bond)
+├── error.rs          # Custom error types
+├── constants.rs      # Program constants
+├── assertions.rs     # Validation utilities
+└── utils/            # Utility modules
+    ├── mod.rs
+    ├── account_utils.rs
+    ├── calculation_utils.rs
+    └── token_utils.rs
 ```
 
-## Client Structure (`clients/`)
-- `js/` - TypeScript/JavaScript client library
-- `rust/` - Rust client library
-- Both clients are auto-generated from program IDL using Codama
+## Key Account Types
+
+### State Accounts (PDAs)
+- **Global Admin PDA**: `["global_admin"]` - Central configuration
+- **User Account PDA**: `["user", wallet_pubkey]` - Per-user aggregation
+- **Bond PDA**: `["bond", user_pda, bond_index]` - Individual bonds
+
+### Token Accounts (ATAs)
+- **Rewards Pool ATA**: Owned by Global Admin PDA
+- **Treasury ATA**: Owned by treasury wallet
+- **Team ATA**: Owned by team wallet
+- **User Wallet ATA**: Owned by user wallet
+
+## Client Structure
+
+### JavaScript Client (`clients/js/`)
+```
+src/
+├── index.ts          # Main exports
+test/
+├── _setup.ts         # Test configuration
+├── create.test.ts    # Bond creation tests
+└── increment.test.ts # Reward increment tests
+```
+
+### Rust Client (`clients/rust/`)
+```
+src/
+├── lib.rs           # Client library
+tests/
+└── create.rs        # Integration tests
+```
 
 ## Scripts Organization (`scripts/`)
-- `program/` - Program-specific build and test scripts
-- `client/` - Client-specific scripts (format, lint, test, publish)
-- `ci/` - Continuous integration scripts
-- Root level scripts for common operations (validator, IDL generation)
 
-## Key Account Types (PDAs)
-- **Global Config PDA**: `["global_config", program_id]`
-- **User PDA**: `["user", wallet_pubkey, program_id]`
-- **Bond PDA**: `["bond", user_pda, bond_index, program_id]`
-- **Mint Authority PDA**: `["mint_authority", program_id]`
-- **Vault PDAs**: `["rewards_vault"|"treasury_vault"|"team_vault", program_id]`
-
-## Development Workflow
-1. Modify program code in `program/src/`
-2. Build with `pnpm programs:build`
-3. Generate IDL with `pnpm generate:idls`
-4. Generate clients with `pnpm generate:clients`
-5. Test with local validator using `pnpm validator:start`
+```
+scripts/
+├── program/         # Program-specific scripts
+│   ├── build.mjs   # Build programs
+│   ├── test.mjs    # Test programs
+│   ├── format.mjs  # Format code
+│   └── lint.mjs    # Lint code
+├── client/         # Client-specific scripts
+└── ci/             # CI/CD utilities
+```
 
 ## Configuration Files
-- `.prettierrc` - Code formatting rules
-- `rustfmt.toml` - Rust formatting configuration
-- `tsconfig.json` - TypeScript configuration (in client dirs)
-- Program ID and dependencies defined in `program/Cargo.toml`
+
+- **Cargo.toml**: Workspace configuration with Solana CLI version
+- **rustfmt.toml**: Rust formatting rules (max_width=70)
+- **package.json**: NPM scripts and dependencies
+- **.prettierrc**: JavaScript/TypeScript formatting
+
+## Development Patterns
+
+### Account Serialization
+All state accounts implement the `Serialization<T>` trait with Borsh serialization.
+
+### PDA Derivation
+Consistent seed patterns:
+- Global config: `["global_admin"]`
+- User accounts: `["user", wallet_pubkey]`
+- Bonds: `["bond", user_pda, bond_index]`
+
+### Error Handling
+Custom error types in `error.rs` with descriptive variants for validation failures.
+
+### Modular Utilities
+Utility functions organized by domain (account, calculation, token operations).

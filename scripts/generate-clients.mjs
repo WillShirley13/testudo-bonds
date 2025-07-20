@@ -4,13 +4,16 @@ import * as c from 'codama';
 import { rootNodeFromAnchor } from '@codama/nodes-from-anchor';
 import { renderVisitor as renderJavaScriptVisitor } from '@codama/renderers-js';
 import { renderVisitor as renderRustVisitor } from '@codama/renderers-rust';
-import { getAllProgramIdls } from './utils.mjs';
 
 // Instanciate Codama.
-const [idl, ...additionalIdls] = getAllProgramIdls().map((idl) =>
-  rootNodeFromAnchor(require(idl))
+const idlPath = path.join(
+  __dirname,
+  '..',
+  'idls',
+  'testudo_testudo_bonds.json'
 );
-const codama = c.createFromRoot(idl, additionalIdls);
+const idl = rootNodeFromAnchor(require(idlPath));
+const codama = c.createFromRoot(idl);
 
 // Update programs.
 codama.update(
@@ -19,48 +22,80 @@ codama.update(
   })
 );
 
-// Update accounts.
+// Update accounts with PDA seeds.
 codama.update(
   c.updateAccountsVisitor({
-    counter: {
+    Admin: {
+      name: 'globalAdmin',
+      seeds: [c.constantPdaSeedNodeFromString('utf8', 'global_admin')],
+    },
+    UserAccount: {
+      name: 'userPda',
       seeds: [
-        c.constantPdaSeedNodeFromString('utf8', 'counter'),
+        c.constantPdaSeedNodeFromString('utf8', 'user'),
         c.variablePdaSeedNode(
-          'authority',
+          'userWallet',
           c.publicKeyTypeNode(),
-          'The authority of the counter account'
+          'The wallet of the user'
+        ),
+      ],
+    },
+    Bond: {
+      seeds: [
+        c.constantPdaSeedNodeFromString('utf8', 'bond'),
+        c.variablePdaSeedNode(
+          'userPda',
+          c.publicKeyTypeNode(),
+          'The user PDA account'
+        ),
+        c.variablePdaSeedNode(
+          'bondIndex',
+          c.numberTypeNode('u8'),
+          'The bond index'
         ),
       ],
     },
   })
 );
 
-// Update instructions.
+// Update instructions with default values and account relationships.
 codama.update(
   c.updateInstructionsVisitor({
-    create: {
-      byteDeltas: [c.instructionByteDeltaNode(c.accountLinkNode('counter'))],
+    initializeAdmin: {
+      byteDeltas: [
+        c.instructionByteDeltaNode(c.accountLinkNode('globalAdmin')),
+      ],
       accounts: {
-        counter: { defaultValue: c.pdaValueNode('counter') },
-        payer: { defaultValue: c.accountValueNode('authority') },
+        globalAdmin: { defaultValue: c.pdaValueNode('globalAdmin') },
       },
     },
-    increment: {
+    createUser: {
+      byteDeltas: [c.instructionByteDeltaNode(c.accountLinkNode('userPda'))],
       accounts: {
-        counter: { defaultValue: c.pdaValueNode('counter') },
-      },
-      arguments: {
-        amount: { defaultValue: c.noneValueNode() },
+        userPda: { defaultValue: c.pdaValueNode('userPda') },
       },
     },
-  })
-);
-
-// Set account discriminators.
-const key = (name) => ({ field: 'key', value: c.enumValueNode('Key', name) });
-codama.update(
-  c.setAccountDiscriminatorFromFieldVisitor({
-    counter: key('counter'),
+    initializeBond: {
+      byteDeltas: [c.instructionByteDeltaNode(c.accountLinkNode('bond'))],
+      accounts: {
+        bond: { defaultValue: c.pdaValueNode('Bond') },
+        globalAdmin: { defaultValue: c.pdaValueNode('globalAdmin') },
+        userPda: { defaultValue: c.pdaValueNode('userPda') },
+      },
+    },
+    processClaim: {
+      accounts: {
+        bond: { defaultValue: c.pdaValueNode('Bond') },
+        globalAdmin: { defaultValue: c.pdaValueNode('globalAdmin') },
+        userPda: { defaultValue: c.pdaValueNode('userPda') },
+        newBondPda: { defaultValue: c.pdaValueNode('Bond') },
+      },
+    },
+    updateAdmin: {
+      accounts: {
+        globalAdmin: { defaultValue: c.pdaValueNode('globalAdmin') },
+      },
+    },
   })
 );
 
@@ -69,6 +104,7 @@ const jsClient = path.join(__dirname, '..', 'clients', 'js');
 codama.accept(
   renderJavaScriptVisitor(path.join(jsClient, 'src', 'generated'), {
     prettierOptions: require(path.join(jsClient, '.prettierrc.json')),
+    solanaLibrary: '@solana/kit',
   })
 );
 

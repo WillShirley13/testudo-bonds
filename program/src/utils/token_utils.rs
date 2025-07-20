@@ -7,16 +7,17 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use spl_token::instruction::transfer_checked;
 
 pub fn create_ata<'a>(
+    payer: &'a AccountInfo<'a>,
+    system_program: &'a AccountInfo<'a>,
     token_program: &'a AccountInfo<'a>,
-    associated_token_program: &'a AccountInfo<'a>,
     native_token_mint: &'a AccountInfo<'a>,
-    wallet: &'a AccountInfo<'a>,
+    wallet_of_ata: &'a AccountInfo<'a>,
     token_account: &'a AccountInfo<'a>,
     signer_seeds: Option<&[&[&[u8]]]>,
 ) -> ProgramResult {
     let ix = create_associated_token_account(
-        wallet.key,
-        wallet.key,
+        payer.key,
+        wallet_of_ata.key,
         native_token_mint.key,
         token_program.key,
     );
@@ -25,11 +26,12 @@ pub fn create_ata<'a>(
         invoke_signed(
             &ix,
             &[
-                token_program.clone(),
-                associated_token_program.clone(),
-                native_token_mint.clone(),
-                wallet.clone(),
-                token_account.clone(),
+                payer.clone(), // 1. [writeable,signer] Funding account
+                token_account.clone(), // 2. [writeable] ATA address to be created
+                wallet_of_ata.clone(), // 3. [] Wallet address (owner)
+                native_token_mint.clone(), // 4. [] Token mint
+                system_program.clone(), // 5. [] System program
+                token_program.clone(), // 6. [] SPL Token program
             ],
             signer_seeds,
         )?;
@@ -37,11 +39,12 @@ pub fn create_ata<'a>(
         invoke(
             &ix,
             &[
-                token_program.clone(),
-                associated_token_program.clone(),
-                native_token_mint.clone(),
-                wallet.clone(),
-                token_account.clone(),
+                payer.clone(), // 1. [writeable,signer] Funding account
+                token_account.clone(), // 2. [writeable] ATA address to be created
+                wallet_of_ata.clone(), // 3. [] Wallet address (owner)
+                native_token_mint.clone(), // 4. [] Token mint
+                system_program.clone(), // 5. [] System program
+                token_program.clone(), // 6. [] SPL Token program
             ],
         )?;
     }
