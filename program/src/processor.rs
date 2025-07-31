@@ -11,6 +11,7 @@ use crate::constants::{
 use crate::error::TestudoBondsError;
 use crate::instruction::{ProcessClaimPayload, UpdateAdminPayload};
 use crate::state::{Admin, Bond, Serialization, UserAccount};
+use crate::utils::realloc_account;
 use crate::utils::{
     account_utils::{close_account, create_account},
     calculation_utils::{
@@ -557,7 +558,13 @@ fn initialize_bond<'a>(
             user_data_current_size,
             user_data_new_size
         );
-        user_pda.resize(user_data_new_size)?;
+        realloc_account(
+            user_pda,
+            user_wallet,
+            system_program,
+            user_data_new_size,
+            false,
+        )?;
     }
 
     user_pda_data.serialize_account_data(user_pda)?;
@@ -827,7 +834,13 @@ pub fn process_claim<'a>(
             user_data_current_size,
             user_data_new_size
         );
-        user_pda.resize(user_data_new_size)?;
+        realloc_account(
+            user_pda,
+            user_wallet,
+            system_program,
+            user_data_new_size,
+            false,
+        )?;
     }
 
     user_pda_data.total_accrued_rewards += reward;

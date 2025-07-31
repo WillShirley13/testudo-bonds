@@ -135,7 +135,7 @@ describe('Bond Instructions', async () => {
 
         assertWithLog(bondData.owner, userPda, 'Bond owner should be the user');
         assertWithLog(bondData.bondIndex, newBondIndex, 'Bond index should be the new bond index');
-        assertWithLog(bondData.lastClaimTimestamp, recentBlockhash.creationTimestamp, 'Upon creation, last claim and creation timestamps should be the same');
+        assertWithLog(bondData.lastClaimTimestamp, bondData.creationTimestamp, 'Upon creation, last claim and creation timestamps should be the same');
         assertWithLog(bondData.totalClaimed, 0n, 'Bond total claimed should be 0');
         assertWithLog(bondData.isActive, true, 'Bond should be active');
     });

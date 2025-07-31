@@ -6,9 +6,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_program::{
-        instruction as system_instruction, ID as system_program_id,
-    },
+    system_program::ID as system_program_id,
     sysvar::Sysvar,
 };
 use solana_system_interface::instruction;
@@ -131,38 +129,6 @@ pub fn transfer_lamports_from_pdas<'a>(
         to.lamports().checked_add(lamports).ok_or::<ProgramError>(
             TestudoBondsError::NumericalOverflow.into(),
         )?;
-
-    Ok(())
-}
-
-pub fn realloc_account<'a>(
-    account: &AccountInfo<'a>,
-    payer: &AccountInfo<'a>,
-    system_program: &AccountInfo<'a>,
-    new_size: usize,
-) -> ProgramResult {
-    let rent = Rent::get()?;
-    let new_minimum_balance = rent.minimum_balance(new_size);
-    let current_balance = account.lamports();
-
-    // Calculate additional lamports needed for rent exemption
-    if new_minimum_balance > current_balance {
-        let lamports_diff =
-            new_minimum_balance.saturating_sub(current_balance);
-
-        // Transfer additional lamports from payer to account
-        invoke(
-            &system_instruction::transfer(
-                payer.key,
-                account.key,
-                lamports_diff,
-            ),
-            &[payer.clone(), account.clone(), system_program.clone()],
-        )?;
-    }
-
-    // Realloc the account to new size
-    account.realloc(new_size, false)?;
 
     Ok(())
 }

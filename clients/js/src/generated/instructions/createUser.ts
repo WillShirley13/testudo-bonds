@@ -160,7 +160,7 @@ export async function getCreateUserInstructionAsync<
     }
 
     // Bytes created or reallocated by the instruction.
-    const byteDelta: number = [getUserPdaSize() + BASE_ACCOUNT_SIZE].reduce(
+    const byteDelta: number = [(getUserPdaSize()) + BASE_ACCOUNT_SIZE].reduce(
         (a, b) => a + b,
         0
     );
@@ -241,7 +241,7 @@ export function getCreateUserInstruction<
     }
 
     // Bytes created or reallocated by the instruction.
-    const byteDelta: number = [getUserPdaSize() + BASE_ACCOUNT_SIZE].reduce(
+    const byteDelta: number = [(getUserPdaSize()) + BASE_ACCOUNT_SIZE].reduce(
         (a, b) => a + b,
         0
     );
