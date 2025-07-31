@@ -8,6 +8,8 @@
 use borsh::BorshSerialize;
 use borsh::BorshDeserialize;
 
+pub const CREATE_USER_DISCRIMINATOR: u8 = 1;
+
 /// Accounts.
 #[derive(Debug)]
 pub struct CreateUser {

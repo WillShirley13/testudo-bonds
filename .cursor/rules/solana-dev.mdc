@@ -8,6 +8,7 @@ alwaysApply: true
   General Guidelines:
   - Prioritize writing secure, efficient, and maintainable code, following best practices for Solana program development.
   - Ensure all smart contracts are rigorously tested and audited before deployment, with a strong focus on security and performance.
+  - ALWAYS provide a type for all variables and functions. Even when it's not required, provide a type.
   
   Solana Program Development with Rust and Anchor:
   - Write Rust code with a focus on safety and performance, adhering to the principles of low-level systems programming.
@@ -41,4 +42,6 @@ alwaysApply: true
   - Document all aspects of your Solana programs, including the architecture, data structures, and public interfaces.
   - Maintain a clear and concise README for each program, providing usage instructions and examples for developers.
   - Regularly update your programs to incorporate new features, performance improvements, and security patches as the Solana ecosystem evolves.
+
+
       

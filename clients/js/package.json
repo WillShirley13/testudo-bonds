@@ -21,7 +21,9 @@
     "scripts": {
         "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
         "build:docs": "typedoc",
-        "test": "ava",
+        "test": "vitest run --reporter=verbose",
+        "test:watch": "vitest --reporter=verbose",
+        "test:ui": "vitest --ui",
         "lint": "eslint --ext js,ts,tsx src",
         "lint:fix": "eslint --fix --ext js,ts,tsx src",
         "format": "prettier --check src test",
@@ -45,13 +47,12 @@
         "@solana/web3.js": "1.98.2"
     },
     "devDependencies": {
-        "@ava/typescript": "6.0.0",
         "@solana/eslint-config-solana": "5.0.0",
         "@solana/web3.js": "1.98.2",
         "@types/node": "24.0.14",
         "@typescript-eslint/eslint-plugin": "8.37.0",
         "@typescript-eslint/parser": "8.37.0",
-        "ava": "6.4.1",
+        "@vitest/ui": "^3.2.4",
         "eslint": "9.31.0",
         "prettier": "3.6.2",
         "rimraf": "6.0.1",
@@ -59,21 +60,10 @@
         "tsup": "8.5.0",
         "tsx": "^4.20.3",
         "typedoc": "0.28.7",
-        "typescript": "5.8.3"
+        "typescript": "5.8.3",
+        "vitest": "^3.2.4"
     },
-    "ava": {
-        "extensions": [
-            "ts"
-        ],
-        "require": [
-            "tsx/cjs"
-        ],
-        "timeout": "60s",
-        "serial": true,
-        "files": [
-            "test/**/*.test.ts"
-        ]
-    },
+
     "packageManager": "pnpm@9.1.0",
     "dependencies": {
         "@solana-program/system": "^0.7.0",

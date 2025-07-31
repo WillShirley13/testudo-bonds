@@ -14,17 +14,18 @@ import {
     getU8Decoder,
     getU8Encoder,
     transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
     type Address,
-    type Codec,
-    type Decoder,
-    type Encoder,
-    type IAccountMeta,
-    type IAccountSignerMeta,
-    type IInstruction,
-    type IInstructionWithAccounts,
-    type IInstructionWithData,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
     type ReadonlyAccount,
     type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
@@ -34,7 +35,7 @@ import { TESTUDO_BONDS_PROGRAM_ADDRESS } from '../programs';
 import {
     expectAddress,
     getAccountMetaFactory,
-    type IInstructionWithByteDelta,
+    type InstructionWithByteDelta,
     type ResolvedAccount,
 } from '../shared';
 
@@ -46,22 +47,22 @@ export function getCreateUserDiscriminatorBytes() {
 
 export type CreateUserInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountUserPda extends string | IAccountMeta<string> = string,
-    TAccountUserWallet extends string | IAccountMeta<string> = string,
+    TAccountUserPda extends string | AccountMeta<string> = string,
+    TAccountUserWallet extends string | AccountMeta<string> = string,
     TAccountSystemProgram extends
         | string
-        | IAccountMeta<string> = '11111111111111111111111111111111',
-    TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
-> = IInstruction<TProgram> &
-    IInstructionWithData<Uint8Array> &
-    IInstructionWithAccounts<
+        | AccountMeta<string> = '11111111111111111111111111111111',
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+> = Instruction<TProgram> &
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
         [
             TAccountUserPda extends string
                 ? WritableAccount<TAccountUserPda>
                 : TAccountUserPda,
             TAccountUserWallet extends string
                 ? ReadonlySignerAccount<TAccountUserWallet> &
-                      IAccountSignerMeta<TAccountUserWallet>
+                      AccountSignerMeta<TAccountUserWallet>
                 : TAccountUserWallet,
             TAccountSystemProgram extends string
                 ? ReadonlyAccount<TAccountSystemProgram>
@@ -74,18 +75,18 @@ export type CreateUserInstructionData = { discriminator: number };
 
 export type CreateUserInstructionDataArgs = {};
 
-export function getCreateUserInstructionDataEncoder(): Encoder<CreateUserInstructionDataArgs> {
+export function getCreateUserInstructionDataEncoder(): FixedSizeEncoder<CreateUserInstructionDataArgs> {
     return transformEncoder(
         getStructEncoder([['discriminator', getU8Encoder()]]),
         (value) => ({ ...value, discriminator: CREATE_USER_DISCRIMINATOR })
     );
 }
 
-export function getCreateUserInstructionDataDecoder(): Decoder<CreateUserInstructionData> {
+export function getCreateUserInstructionDataDecoder(): FixedSizeDecoder<CreateUserInstructionData> {
     return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getCreateUserInstructionDataCodec(): Codec<
+export function getCreateUserInstructionDataCodec(): FixedSizeCodec<
     CreateUserInstructionDataArgs,
     CreateUserInstructionData
 > {
@@ -127,7 +128,7 @@ export async function getCreateUserInstructionAsync<
         TAccountUserWallet,
         TAccountSystemProgram
     > &
-        IInstructionWithByteDelta
+        InstructionWithByteDelta
 > {
     // Program address.
     const programAddress =
@@ -214,7 +215,7 @@ export function getCreateUserInstruction<
     TAccountUserWallet,
     TAccountSystemProgram
 > &
-    IInstructionWithByteDelta {
+    InstructionWithByteDelta {
     // Program address.
     const programAddress =
         config?.programAddress ?? TESTUDO_BONDS_PROGRAM_ADDRESS;
@@ -266,7 +267,7 @@ export function getCreateUserInstruction<
 
 export type ParsedCreateUserInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -282,11 +283,11 @@ export type ParsedCreateUserInstruction<
 
 export function parseCreateUserInstruction<
     TProgram extends string,
-    TAccountMetas extends readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[],
 >(
-    instruction: IInstruction<TProgram> &
-        IInstructionWithAccounts<TAccountMetas> &
-        IInstructionWithData<Uint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>
 ): ParsedCreateUserInstruction<TProgram, TAccountMetas> {
     if (instruction.accounts.length < 3) {
         // TODO: Coded error.

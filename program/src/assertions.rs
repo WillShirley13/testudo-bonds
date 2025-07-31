@@ -182,7 +182,7 @@ pub fn assert_same_pubkeys(
             account.key,
             expected
         );
-        Err(TestudoBondsError::AccountMismatch.into())
+        Err(TestudoBondsError::InvalidAccountKey.into())
     } else {
         Ok(())
     }

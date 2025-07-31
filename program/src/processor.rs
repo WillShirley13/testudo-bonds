@@ -153,6 +153,7 @@ fn initialize_admin<'a>(
             None,
         )?;
     }
+    msg!("Created treasury ATA");
 
     if team_ata.data_len() != TokenAccount::LEN {
         create_ata(
@@ -165,7 +166,7 @@ fn initialize_admin<'a>(
             None,
         )?;
     }
-
+    msg!("Created team ATA");
     if rewards_pool_ata.data_len() != TokenAccount::LEN {
         create_ata(
             authority,
@@ -177,7 +178,7 @@ fn initialize_admin<'a>(
             Some(&[&[b"global_admin", &[admin_bump]]]),
         )?;
     }
-
+    msg!("Created rewards pool ATA");
     Ok(())
 }
 
@@ -247,7 +248,7 @@ fn initialize_user<'a>(
         user_pda,
         user_wallet,
         system_program,
-        UserAccount::SIZE,
+        UserAccount::INITIAL_SIZE,
         program_id,
         Some(&[&[b"user", user_wallet.key.as_ref(), &[bump]]]),
     )?;
@@ -257,10 +258,15 @@ fn initialize_user<'a>(
         user: *user_wallet.key,
         bond_count: 0,
         total_accrued_rewards: 0,
-        active_bonds: Vec::new(),
         bond_index: 0,
+        active_bonds: Vec::new(),
     };
     user_pda_data.serialize_account_data(user_pda)?;
+
+    msg!(
+        "User PDA initialized with data size {}",
+        user_pda.data_len()
+    );
 
     Ok(())
 }
@@ -269,6 +275,7 @@ fn initialize_bond<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
 ) -> ProgramResult {
+    msg!("Initializing bond");
     // Extract accounts
     let [bond_pda, user_wallet, user_pda, global_admin, user_wallet_ata, rewards_pool_ata, treasury_ata, team_ata, native_token_mint, system_program, token_program] =
         &accounts
@@ -278,6 +285,7 @@ fn initialize_bond<'a>(
 
     // Validate signer
     assert_signer("User Wallet", user_wallet)?;
+    msg!("✅ User wallet signer validated");
 
     // Validate user PDA and load data
     assert_pda(
@@ -286,16 +294,29 @@ fn initialize_bond<'a>(
         program_id,
         &[b"user", user_wallet.key.as_ref()],
     )?;
+    msg!("✅ User PDA address validated");
+
     assert_non_empty("User PDA ", user_pda)?;
+    msg!("✅ User PDA account exists and is non-empty");
+
+    // Debug: Log account size information
+    msg!("🔍 User PDA account size: {} bytes", user_pda.data_len());
+    msg!(
+        "🔍 Expected UserAccount::SIZE: {} bytes",
+        UserAccount::INITIAL_SIZE
+    );
+
     let mut user_pda_data = UserAccount::deserialize_account_data(
         user_pda.data.borrow_mut().as_ref(),
     )?;
+    msg!("✅ User PDA data deserialized successfully");
 
     assert_same_pubkeys(
         "User PDA",
         user_wallet,
         &user_pda_data.user,
     )?;
+    msg!("✅ User PDA ownership validated");
 
     // Validate bond PDA and account state
     let bond_bump = assert_pda(
@@ -308,7 +329,10 @@ fn initialize_bond<'a>(
             &[user_pda_data.bond_index],
         ],
     )?;
+    msg!("✅ Bond PDA address validated with bump: {}", bond_bump);
+
     assert_empty("Bond PDA", bond_pda)?;
+    msg!("✅ Bond PDA confirmed as empty (ready for initialization)");
 
     // Validate global admin
     assert_pda(
@@ -317,71 +341,120 @@ fn initialize_bond<'a>(
         program_id,
         &[b"global_admin"],
     )?;
+    msg!("✅ Global Admin PDA address validated");
+
     assert_non_empty("Global Admin PDA", global_admin)?;
+    msg!("✅ Global Admin PDA account exists and is non-empty");
 
     // Validate token accounts and mint
     let global_admin_data = Admin::deserialize_account_data(
         global_admin.data.borrow_mut().as_ref(),
     )?;
+    msg!("✅ Global Admin data deserialized successfully");
     assert_same_pubkeys(
         "Rewards Pool ATA",
         rewards_pool_ata,
         &global_admin_data.rewards_pool,
     )?;
+    msg!("✅ Rewards Pool ATA address validated");
+
     assert_same_pubkeys(
         "Treasury ATA",
         treasury_ata,
         &global_admin_data.treasury,
     )?;
+    msg!("✅ Treasury ATA address validated");
+
     assert_same_pubkeys(
         "Team ATA",
         team_ata,
         &global_admin_data.team,
     )?;
+    msg!("✅ Team ATA address validated");
+
     assert_same_pubkeys(
         "Native Token Mint",
         native_token_mint,
         &global_admin_data.native_token_mint,
     )?;
+    msg!("✅ Native Token Mint address validated");
+
     assert_valid_token_account(
         "User Wallet ATA",
-        user_wallet_ata.key,
+        user_wallet.key,
         native_token_mint.key,
         user_wallet_ata,
     )?;
+    msg!("✅ User Wallet ATA validated");
 
     // Assert Admin has not paused bond operations
     if global_admin_data.pause_bond_operations {
+        msg!("❌ Bond operations are paused by admin");
         return Err(TestudoBondsError::BondOperationsPaused.into());
     }
+    msg!("✅ Bond operations are active (not paused)");
 
     // Validate program accounts
     assert_valid_system_program(system_program.key)?;
+    msg!("✅ System program validated");
+
     assert_valid_token_program(token_program.key)?;
+    msg!("✅ Token program validated");
 
     // Transfer tokens from User to reward_pool, treasury & team
     let token_deposit_split: [u16; 3] =
         global_admin_data.token_deposit_split;
+    msg!(
+        "✅ Token deposit split configuration loaded: {:?}",
+        token_deposit_split
+    );
+
     let user_balance = TokenAccount::unpack(
         user_wallet_ata.data.borrow_mut().as_ref(),
     )?;
     let user_balance_amount = user_balance.amount;
+    msg!(
+        "✅ User token balance loaded: {} tokens",
+        user_balance_amount
+    );
 
     // Assert User has not reached max bonds
     if user_pda_data.bond_count
         >= global_admin_data.max_bonds_per_wallet
     {
+        msg!(
+            "❌ User has reached max bonds limit: {}/{}",
+            user_pda_data.bond_count,
+            global_admin_data.max_bonds_per_wallet
+        );
         return Err(TestudoBondsError::MaxBondsReached.into());
     }
+    msg!(
+        "✅ User bond count check passed: {}/{}",
+        user_pda_data.bond_count,
+        global_admin_data.max_bonds_per_wallet
+    );
 
     // Assert User has enough tokens
     if user_balance_amount < (SHELLS_PER_TESTUDO * 10) {
+        msg!(
+            "❌ Insufficient tokens: {} < {}",
+            user_balance_amount,
+            SHELLS_PER_TESTUDO * 10
+        );
         return Err(TestudoBondsError::InsufficientTokens.into());
     }
+    msg!(
+        "✅ User has sufficient tokens: {} >= {}",
+        user_balance_amount,
+        SHELLS_PER_TESTUDO * 10
+    );
 
     // Calculate token deposit split
     let token_deposit_split =
         calculate_token_deposit_split(token_deposit_split);
+    msg!("✅ Token amounts calculated - Rewards: {}, Treasury: {}, Team: {}", 
+        token_deposit_split[0], token_deposit_split[1], token_deposit_split[2]);
 
     // Transfer tokens from User to reward_pool
     transfer_spl_tokens(
@@ -394,6 +467,10 @@ fn initialize_bond<'a>(
         9,
         None,
     )?;
+    msg!(
+        "✅ Transferred {} tokens from User to reward_pool",
+        token_deposit_split[0]
+    );
 
     // Transfer tokens from User to treasury
     transfer_spl_tokens(
@@ -406,6 +483,10 @@ fn initialize_bond<'a>(
         9,
         None,
     )?;
+    msg!(
+        "✅ Transferred {} tokens from User to treasury",
+        token_deposit_split[1]
+    );
 
     // Transfer tokens from User to team
     transfer_spl_tokens(
@@ -418,6 +499,10 @@ fn initialize_bond<'a>(
         9,
         None,
     )?;
+    msg!(
+        "✅ Transferred {} tokens from User to team",
+        token_deposit_split[2]
+    );
 
     // Create bond account
     create_account(
@@ -433,6 +518,7 @@ fn initialize_bond<'a>(
             &[bond_bump],
         ]]),
     )?;
+    msg!("✅ Bond account created with size: {} bytes", Bond::SIZE);
 
     // Initialize bond data with current timestamp
     let timestamp: i64 = Clock::get()?.unix_timestamp;
@@ -445,7 +531,14 @@ fn initialize_bond<'a>(
         // accrued_rewards: 0,
         is_active: true,
     };
+    msg!(
+        "✅ Bond data structure created - Index: {}, Timestamp: {}",
+        user_pda_data.bond_index,
+        timestamp
+    );
+
     bond_pda_data.serialize_account_data(bond_pda)?;
+    msg!("✅ Bond data serialized to account");
 
     // Update user data with new bond
     user_pda_data
@@ -453,7 +546,24 @@ fn initialize_bond<'a>(
         .push((user_pda_data.bond_index, *bond_pda.key));
     user_pda_data.bond_index += 1;
     user_pda_data.bond_count += 1;
+    msg!("✅ User data updated - New bond count: {}, Next bond index: {}", user_pda_data.bond_count, user_pda_data.bond_index);
+
+    let user_data_current_size = user_pda.data_len();
+    let user_data_new_size = user_pda_data.get_size();
+
+    if user_data_new_size > user_data_current_size {
+        msg!(
+            "🔍 User PDA data size increased from {} to {}",
+            user_data_current_size,
+            user_data_new_size
+        );
+        user_pda.resize(user_data_new_size)?;
+    }
+
     user_pda_data.serialize_account_data(user_pda)?;
+    msg!("✅ User PDA data serialized successfully");
+
+    msg!("🎉 Bond initialization completed successfully!");
 
     Ok(())
 }
@@ -643,7 +753,6 @@ pub fn process_claim<'a>(
             .active_bonds
             .push((user_pda_data.bond_index, *new_bond_pda.key));
         user_pda_data.bond_index += 1;
-        user_pda_data.bond_count += 1;
 
         // 2. split the 10-token deposit out of the rewards pool
         let base_amount = SHELLS_PER_TESTUDO * 8;
@@ -707,6 +816,18 @@ pub fn process_claim<'a>(
         close_account(bond_pda, user_wallet)?;
     } else {
         bond_pda_data.serialize_account_data(bond_pda)?;
+    }
+
+    let user_data_current_size = user_pda.data_len();
+    let user_data_new_size = user_pda_data.get_size();
+
+    if user_data_new_size > user_data_current_size {
+        msg!(
+            "🔍 User PDA data size increased from {} to {}",
+            user_data_current_size,
+            user_data_new_size
+        );
+        user_pda.resize(user_data_new_size)?;
     }
 
     user_pda_data.total_accrued_rewards += reward;

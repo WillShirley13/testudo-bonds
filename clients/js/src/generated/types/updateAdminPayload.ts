@@ -17,13 +17,13 @@ import {
 import {
     getGlobalAdminDecoder,
     getGlobalAdminEncoder,
-    type GlobalAdmin,
-    type GlobalAdminArgs,
+    type GlobalAdmin as Admin,
+    type GlobalAdminArgs as AdminArgs,
 } from '../accounts';
 
-export type UpdateAdminPayload = { newAdminData: GlobalAdmin };
+export type UpdateAdminPayload = { newAdminData: Admin };
 
-export type UpdateAdminPayloadArgs = { newAdminData: GlobalAdminArgs };
+export type UpdateAdminPayloadArgs = { newAdminData: AdminArgs };
 
 export function getUpdateAdminPayloadEncoder(): Encoder<UpdateAdminPayloadArgs> {
     return getStructEncoder([['newAdminData', getGlobalAdminEncoder()]]);

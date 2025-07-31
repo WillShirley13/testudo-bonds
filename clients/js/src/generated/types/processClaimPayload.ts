@@ -14,30 +14,30 @@ import {
     getStructEncoder,
     getU8Decoder,
     getU8Encoder,
-    type Codec,
-    type Decoder,
-    type Encoder,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
 } from '@solana/kit';
 
 export type ProcessClaimPayload = { bondIndex: number; autoCompound: boolean };
 
 export type ProcessClaimPayloadArgs = ProcessClaimPayload;
 
-export function getProcessClaimPayloadEncoder(): Encoder<ProcessClaimPayloadArgs> {
+export function getProcessClaimPayloadEncoder(): FixedSizeEncoder<ProcessClaimPayloadArgs> {
     return getStructEncoder([
         ['bondIndex', getU8Encoder()],
         ['autoCompound', getBooleanEncoder()],
     ]);
 }
 
-export function getProcessClaimPayloadDecoder(): Decoder<ProcessClaimPayload> {
+export function getProcessClaimPayloadDecoder(): FixedSizeDecoder<ProcessClaimPayload> {
     return getStructDecoder([
         ['bondIndex', getU8Decoder()],
         ['autoCompound', getBooleanDecoder()],
     ]);
 }
 
-export function getProcessClaimPayloadCodec(): Codec<
+export function getProcessClaimPayloadCodec(): FixedSizeCodec<
     ProcessClaimPayloadArgs,
     ProcessClaimPayload
 > {

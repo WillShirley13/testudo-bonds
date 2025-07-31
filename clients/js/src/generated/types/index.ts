@@ -8,9 +8,3 @@
 
 export * from './processClaimPayload';
 export * from './updateAdminPayload';
-
-// Export encoder/decoder functions from accounts
-export { 
-    getGlobalAdminEncoder as getAdminEncoder,
-    getGlobalAdminDecoder as getAdminDecoder 
-} from '../accounts/globalAdmin';

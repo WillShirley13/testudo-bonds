@@ -13,16 +13,17 @@ import {
     getU8Decoder,
     getU8Encoder,
     transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
     type Address,
-    type Codec,
-    type Decoder,
-    type Encoder,
-    type IAccountMeta,
-    type IAccountSignerMeta,
-    type IInstruction,
-    type IInstructionWithAccounts,
-    type IInstructionWithData,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
     type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
@@ -38,19 +39,19 @@ export function getUpdateAdminDiscriminatorBytes() {
 
 export type UpdateAdminInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountGlobalAdmin extends string | IAccountMeta<string> = string,
-    TAccountAuthority extends string | IAccountMeta<string> = string,
-    TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
-> = IInstruction<TProgram> &
-    IInstructionWithData<Uint8Array> &
-    IInstructionWithAccounts<
+    TAccountGlobalAdmin extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+> = Instruction<TProgram> &
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
         [
             TAccountGlobalAdmin extends string
                 ? WritableAccount<TAccountGlobalAdmin>
                 : TAccountGlobalAdmin,
             TAccountAuthority extends string
                 ? ReadonlySignerAccount<TAccountAuthority> &
-                      IAccountSignerMeta<TAccountAuthority>
+                      AccountSignerMeta<TAccountAuthority>
                 : TAccountAuthority,
             ...TRemainingAccounts,
         ]
@@ -60,18 +61,18 @@ export type UpdateAdminInstructionData = { discriminator: number };
 
 export type UpdateAdminInstructionDataArgs = {};
 
-export function getUpdateAdminInstructionDataEncoder(): Encoder<UpdateAdminInstructionDataArgs> {
+export function getUpdateAdminInstructionDataEncoder(): FixedSizeEncoder<UpdateAdminInstructionDataArgs> {
     return transformEncoder(
         getStructEncoder([['discriminator', getU8Encoder()]]),
         (value) => ({ ...value, discriminator: UPDATE_ADMIN_DISCRIMINATOR })
     );
 }
 
-export function getUpdateAdminInstructionDataDecoder(): Decoder<UpdateAdminInstructionData> {
+export function getUpdateAdminInstructionDataDecoder(): FixedSizeDecoder<UpdateAdminInstructionData> {
     return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getUpdateAdminInstructionDataCodec(): Codec<
+export function getUpdateAdminInstructionDataCodec(): FixedSizeCodec<
     UpdateAdminInstructionDataArgs,
     UpdateAdminInstructionData
 > {
@@ -196,7 +197,7 @@ export function getUpdateAdminInstruction<
 
 export type ParsedUpdateAdminInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -210,11 +211,11 @@ export type ParsedUpdateAdminInstruction<
 
 export function parseUpdateAdminInstruction<
     TProgram extends string,
-    TAccountMetas extends readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[],
 >(
-    instruction: IInstruction<TProgram> &
-        IInstructionWithAccounts<TAccountMetas> &
-        IInstructionWithData<Uint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>
 ): ParsedUpdateAdminInstruction<TProgram, TAccountMetas> {
     if (instruction.accounts.length < 2) {
         // TODO: Coded error.

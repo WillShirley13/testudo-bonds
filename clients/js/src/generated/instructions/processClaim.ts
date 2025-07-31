@@ -15,17 +15,18 @@ import {
     getU8Decoder,
     getU8Encoder,
     transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
     type Address,
-    type Codec,
-    type Decoder,
-    type Encoder,
-    type IAccountMeta,
-    type IAccountSignerMeta,
-    type IInstruction,
-    type IInstructionWithAccounts,
-    type IInstructionWithData,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
     type ReadonlyAccount,
     type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
@@ -46,36 +47,36 @@ export function getProcessClaimDiscriminatorBytes() {
 
 export type ProcessClaimInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountBond extends string | IAccountMeta<string> = string,
-    TAccountUserWallet extends string | IAccountMeta<string> = string,
-    TAccountUserPda extends string | IAccountMeta<string> = string,
-    TAccountUserWalletAta extends string | IAccountMeta<string> = string,
-    TAccountGlobalAdmin extends string | IAccountMeta<string> = string,
-    TAccountRewardsPoolAta extends string | IAccountMeta<string> = string,
-    TAccountTreasuryAta extends string | IAccountMeta<string> = string,
-    TAccountTeamAta extends string | IAccountMeta<string> = string,
-    TAccountNewBondPda extends string | IAccountMeta<string> = string,
-    TAccountNativeTokenMint extends string | IAccountMeta<string> = string,
+    TAccountBond extends string | AccountMeta<string> = string,
+    TAccountUserWallet extends string | AccountMeta<string> = string,
+    TAccountUserPda extends string | AccountMeta<string> = string,
+    TAccountUserWalletAta extends string | AccountMeta<string> = string,
+    TAccountGlobalAdmin extends string | AccountMeta<string> = string,
+    TAccountRewardsPoolAta extends string | AccountMeta<string> = string,
+    TAccountTreasuryAta extends string | AccountMeta<string> = string,
+    TAccountTeamAta extends string | AccountMeta<string> = string,
+    TAccountNewBondPda extends string | AccountMeta<string> = string,
+    TAccountNativeTokenMint extends string | AccountMeta<string> = string,
     TAccountTokenProgram extends
         | string
-        | IAccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+        | AccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
     TAccountAssociatedTokenProgram extends
         | string
-        | IAccountMeta<string> = string,
+        | AccountMeta<string> = string,
     TAccountSystemProgram extends
         | string
-        | IAccountMeta<string> = '11111111111111111111111111111111',
-    TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
-> = IInstruction<TProgram> &
-    IInstructionWithData<Uint8Array> &
-    IInstructionWithAccounts<
+        | AccountMeta<string> = '11111111111111111111111111111111',
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+> = Instruction<TProgram> &
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
         [
             TAccountBond extends string
                 ? WritableAccount<TAccountBond>
                 : TAccountBond,
             TAccountUserWallet extends string
                 ? ReadonlySignerAccount<TAccountUserWallet> &
-                      IAccountSignerMeta<TAccountUserWallet>
+                      AccountSignerMeta<TAccountUserWallet>
                 : TAccountUserWallet,
             TAccountUserPda extends string
                 ? WritableAccount<TAccountUserPda>
@@ -125,7 +126,7 @@ export type ProcessClaimInstructionDataArgs = {
     autoCompound: boolean;
 };
 
-export function getProcessClaimInstructionDataEncoder(): Encoder<ProcessClaimInstructionDataArgs> {
+export function getProcessClaimInstructionDataEncoder(): FixedSizeEncoder<ProcessClaimInstructionDataArgs> {
     return transformEncoder(
         getStructEncoder([
             ['discriminator', getU8Encoder()],
@@ -136,7 +137,7 @@ export function getProcessClaimInstructionDataEncoder(): Encoder<ProcessClaimIns
     );
 }
 
-export function getProcessClaimInstructionDataDecoder(): Decoder<ProcessClaimInstructionData> {
+export function getProcessClaimInstructionDataDecoder(): FixedSizeDecoder<ProcessClaimInstructionData> {
     return getStructDecoder([
         ['discriminator', getU8Decoder()],
         ['bondIndex', getU8Decoder()],
@@ -144,7 +145,7 @@ export function getProcessClaimInstructionDataDecoder(): Decoder<ProcessClaimIns
     ]);
 }
 
-export function getProcessClaimInstructionDataCodec(): Codec<
+export function getProcessClaimInstructionDataCodec(): FixedSizeCodec<
     ProcessClaimInstructionDataArgs,
     ProcessClaimInstructionData
 > {
@@ -546,7 +547,7 @@ export function getProcessClaimInstruction<
 
 export type ParsedProcessClaimInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -582,11 +583,11 @@ export type ParsedProcessClaimInstruction<
 
 export function parseProcessClaimInstruction<
     TProgram extends string,
-    TAccountMetas extends readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[],
 >(
-    instruction: IInstruction<TProgram> &
-        IInstructionWithAccounts<TAccountMetas> &
-        IInstructionWithData<Uint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>
 ): ParsedProcessClaimInstruction<TProgram, TAccountMetas> {
     if (instruction.accounts.length < 13) {
         // TODO: Coded error.

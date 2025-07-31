@@ -29,12 +29,12 @@ import {
     getU8Encoder,
     type Account,
     type Address,
-    type Codec,
-    type Decoder,
     type EncodedAccount,
-    type Encoder,
     type FetchAccountConfig,
     type FetchAccountsConfig,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
     type MaybeAccount,
     type MaybeEncodedAccount,
 } from '@solana/kit';
@@ -68,7 +68,7 @@ export type GlobalAdminArgs = {
     pauseBondOperations: boolean;
 };
 
-export function getGlobalAdminEncoder(): Encoder<GlobalAdminArgs> {
+export function getGlobalAdminEncoder(): FixedSizeEncoder<GlobalAdminArgs> {
     return getStructEncoder([
         ['authority', getAddressEncoder()],
         ['treasury', getAddressEncoder()],
@@ -84,7 +84,7 @@ export function getGlobalAdminEncoder(): Encoder<GlobalAdminArgs> {
     ]);
 }
 
-export function getGlobalAdminDecoder(): Decoder<GlobalAdmin> {
+export function getGlobalAdminDecoder(): FixedSizeDecoder<GlobalAdmin> {
     return getStructDecoder([
         ['authority', getAddressDecoder()],
         ['treasury', getAddressDecoder()],
@@ -100,7 +100,10 @@ export function getGlobalAdminDecoder(): Decoder<GlobalAdmin> {
     ]);
 }
 
-export function getGlobalAdminCodec(): Codec<GlobalAdminArgs, GlobalAdmin> {
+export function getGlobalAdminCodec(): FixedSizeCodec<
+    GlobalAdminArgs,
+    GlobalAdmin
+> {
     return combineCodec(getGlobalAdminEncoder(), getGlobalAdminDecoder());
 }
 

@@ -14,27 +14,28 @@ import {
     getU8Decoder,
     getU8Encoder,
     transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
     type Address,
-    type Codec,
-    type Decoder,
-    type Encoder,
-    type IAccountMeta,
-    type IAccountSignerMeta,
-    type IInstruction,
-    type IInstructionWithAccounts,
-    type IInstructionWithData,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
     type ReadonlyAccount,
     type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { getBondSize } from '../accounts';
-import { findGlobalAdminPda, findUserPdaPda } from '../pdas';
+import { fetchUserPda, getBondSize } from '../accounts';
+import { findBondPda, findGlobalAdminPda, findUserPdaPda } from '../pdas';
 import { TESTUDO_BONDS_PROGRAM_ADDRESS } from '../programs';
 import {
     expectAddress,
     getAccountMetaFactory,
-    type IInstructionWithByteDelta,
+    type InstructionWithByteDelta,
     type ResolvedAccount,
 } from '../shared';
 
@@ -46,32 +47,32 @@ export function getInitializeBondDiscriminatorBytes() {
 
 export type InitializeBondInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountBond extends string | IAccountMeta<string> = string,
-    TAccountUserWallet extends string | IAccountMeta<string> = string,
-    TAccountUserPda extends string | IAccountMeta<string> = string,
-    TAccountGlobalAdmin extends string | IAccountMeta<string> = string,
-    TAccountUserWalletAta extends string | IAccountMeta<string> = string,
-    TAccountRewardsPoolAta extends string | IAccountMeta<string> = string,
-    TAccountTreasuryAta extends string | IAccountMeta<string> = string,
-    TAccountTeamAta extends string | IAccountMeta<string> = string,
-    TAccountNativeTokenMint extends string | IAccountMeta<string> = string,
+    TAccountBond extends string | AccountMeta<string> = string,
+    TAccountUserWallet extends string | AccountMeta<string> = string,
+    TAccountUserPda extends string | AccountMeta<string> = string,
+    TAccountGlobalAdmin extends string | AccountMeta<string> = string,
+    TAccountUserWalletAta extends string | AccountMeta<string> = string,
+    TAccountRewardsPoolAta extends string | AccountMeta<string> = string,
+    TAccountTreasuryAta extends string | AccountMeta<string> = string,
+    TAccountTeamAta extends string | AccountMeta<string> = string,
+    TAccountNativeTokenMint extends string | AccountMeta<string> = string,
     TAccountSystemProgram extends
         | string
-        | IAccountMeta<string> = '11111111111111111111111111111111',
+        | AccountMeta<string> = '11111111111111111111111111111111',
     TAccountTokenProgram extends
         | string
-        | IAccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-    TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
-> = IInstruction<TProgram> &
-    IInstructionWithData<Uint8Array> &
-    IInstructionWithAccounts<
+        | AccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+> = Instruction<TProgram> &
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
         [
             TAccountBond extends string
                 ? WritableAccount<TAccountBond>
                 : TAccountBond,
             TAccountUserWallet extends string
                 ? ReadonlySignerAccount<TAccountUserWallet> &
-                      IAccountSignerMeta<TAccountUserWallet>
+                      AccountSignerMeta<TAccountUserWallet>
                 : TAccountUserWallet,
             TAccountUserPda extends string
                 ? WritableAccount<TAccountUserPda>
@@ -108,18 +109,18 @@ export type InitializeBondInstructionData = { discriminator: number };
 
 export type InitializeBondInstructionDataArgs = {};
 
-export function getInitializeBondInstructionDataEncoder(): Encoder<InitializeBondInstructionDataArgs> {
+export function getInitializeBondInstructionDataEncoder(): FixedSizeEncoder<InitializeBondInstructionDataArgs> {
     return transformEncoder(
         getStructEncoder([['discriminator', getU8Encoder()]]),
         (value) => ({ ...value, discriminator: INITIALIZE_BOND_DISCRIMINATOR })
     );
 }
 
-export function getInitializeBondInstructionDataDecoder(): Decoder<InitializeBondInstructionData> {
+export function getInitializeBondInstructionDataDecoder(): FixedSizeDecoder<InitializeBondInstructionData> {
     return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getInitializeBondInstructionDataCodec(): Codec<
+export function getInitializeBondInstructionDataCodec(): FixedSizeCodec<
     InitializeBondInstructionDataArgs,
     InitializeBondInstructionData
 > {
@@ -209,7 +210,7 @@ export async function getInitializeBondInstructionAsync<
         TAccountSystemProgram,
         TAccountTokenProgram
     > &
-        IInstructionWithByteDelta
+        InstructionWithByteDelta
 > {
     // Program address.
     const programAddress =
@@ -250,9 +251,11 @@ export async function getInitializeBondInstructionAsync<
         });
     }
     if (!accounts.bond.value) {
-        // Note: bondIndex should be provided by the caller based on user account data
-        // This is a limitation of the generated code - it cannot fetch account data
-        throw new Error('Bond account must be provided explicitly with correct bondIndex');
+        const userPdaData = await fetchUserPda(null as any, expectAddress(accounts.userPda.value));
+        accounts.bond.value = await findBondPda({
+            userPda: expectAddress(accounts.userPda.value),
+            bondIndex: userPdaData.data.bondIndex,
+        });
     }
     if (!accounts.globalAdmin.value) {
         accounts.globalAdmin.value = await findGlobalAdminPda();
@@ -386,7 +389,7 @@ export function getInitializeBondInstruction<
     TAccountSystemProgram,
     TAccountTokenProgram
 > &
-    IInstructionWithByteDelta {
+    InstructionWithByteDelta {
     // Program address.
     const programAddress =
         config?.programAddress ?? TESTUDO_BONDS_PROGRAM_ADDRESS;
@@ -472,7 +475,7 @@ export function getInitializeBondInstruction<
 
 export type ParsedInitializeBondInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -504,11 +507,11 @@ export type ParsedInitializeBondInstruction<
 
 export function parseInitializeBondInstruction<
     TProgram extends string,
-    TAccountMetas extends readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[],
 >(
-    instruction: IInstruction<TProgram> &
-        IInstructionWithAccounts<TAccountMetas> &
-        IInstructionWithData<Uint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitializeBondInstruction<TProgram, TAccountMetas> {
     if (instruction.accounts.length < 11) {
         // TODO: Coded error.

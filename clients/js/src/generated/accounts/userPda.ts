@@ -42,16 +42,16 @@ export type UserPda = {
     user: Address;
     bondCount: number;
     totalAccruedRewards: bigint;
-    activeBonds: Array<readonly [number, Address]>;
     bondIndex: number;
+    activeBonds: Array<readonly [number, Address]>;
 };
 
 export type UserPdaArgs = {
     user: Address;
     bondCount: number;
     totalAccruedRewards: number | bigint;
-    activeBonds: Array<readonly [number, Address]>;
     bondIndex: number;
+    activeBonds: Array<readonly [number, Address]>;
 };
 
 export function getUserPdaEncoder(): Encoder<UserPdaArgs> {
@@ -59,13 +59,13 @@ export function getUserPdaEncoder(): Encoder<UserPdaArgs> {
         ['user', getAddressEncoder()],
         ['bondCount', getU8Encoder()],
         ['totalAccruedRewards', getU64Encoder()],
+        ['bondIndex', getU8Encoder()],
         [
             'activeBonds',
             getArrayEncoder(
                 getTupleEncoder([getU8Encoder(), getAddressEncoder()])
             ),
         ],
-        ['bondIndex', getU8Encoder()],
     ]);
 }
 
@@ -74,13 +74,13 @@ export function getUserPdaDecoder(): Decoder<UserPda> {
         ['user', getAddressDecoder()],
         ['bondCount', getU8Decoder()],
         ['totalAccruedRewards', getU64Decoder()],
+        ['bondIndex', getU8Decoder()],
         [
             'activeBonds',
             getArrayDecoder(
                 getTupleDecoder([getU8Decoder(), getAddressDecoder()])
             ),
         ],
-        ['bondIndex', getU8Decoder()],
     ]);
 }
 
@@ -159,11 +159,4 @@ export async function fetchMaybeUserPdaFromSeeds(
     const { programAddress, ...fetchConfig } = config;
     const [address] = await findUserPdaPda(seeds, { programAddress });
     return await fetchMaybeUserPda(rpc, address, fetchConfig);
-}
-
-export function getUserPdaSize(): number {
-    // Based on Rust UserAccount::SIZE = 32 + 1 + 8 + (4 + (10 * (32 + 1))) + 1
-    // user: Pubkey (32) + bond_count: u8 (1) + total_accrued_rewards: u64 (8) + 
-    // active_bonds: Vec<(u8, Pubkey)> (4 + 10 * (1 + 32)) + bond_index: u8 (1)
-    return 32 + 1 + 8 + (4 + (10 * (32 + 1))) + 1;
 }

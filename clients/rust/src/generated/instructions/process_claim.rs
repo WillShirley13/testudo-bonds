@@ -8,6 +8,8 @@
 use borsh::BorshSerialize;
 use borsh::BorshDeserialize;
 
+pub const PROCESS_CLAIM_DISCRIMINATOR: u8 = 3;
+
 /// Accounts.
 #[derive(Debug)]
 pub struct ProcessClaim {

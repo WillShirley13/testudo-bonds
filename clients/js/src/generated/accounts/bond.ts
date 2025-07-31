@@ -27,12 +27,12 @@ import {
     getU8Encoder,
     type Account,
     type Address,
-    type Codec,
-    type Decoder,
     type EncodedAccount,
-    type Encoder,
     type FetchAccountConfig,
     type FetchAccountsConfig,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
     type MaybeAccount,
     type MaybeEncodedAccount,
 } from '@solana/kit';
@@ -56,7 +56,7 @@ export type BondArgs = {
     isActive: boolean;
 };
 
-export function getBondEncoder(): Encoder<BondArgs> {
+export function getBondEncoder(): FixedSizeEncoder<BondArgs> {
     return getStructEncoder([
         ['owner', getAddressEncoder()],
         ['bondIndex', getU8Encoder()],
@@ -67,7 +67,7 @@ export function getBondEncoder(): Encoder<BondArgs> {
     ]);
 }
 
-export function getBondDecoder(): Decoder<Bond> {
+export function getBondDecoder(): FixedSizeDecoder<Bond> {
     return getStructDecoder([
         ['owner', getAddressDecoder()],
         ['bondIndex', getU8Decoder()],
@@ -78,7 +78,7 @@ export function getBondDecoder(): Decoder<Bond> {
     ]);
 }
 
-export function getBondCodec(): Codec<BondArgs, Bond> {
+export function getBondCodec(): FixedSizeCodec<BondArgs, Bond> {
     return combineCodec(getBondEncoder(), getBondDecoder());
 }
 

@@ -14,17 +14,18 @@ import {
     getU8Decoder,
     getU8Encoder,
     transformEncoder,
+    type AccountMeta,
+    type AccountSignerMeta,
     type Address,
-    type Codec,
-    type Decoder,
-    type Encoder,
-    type IAccountMeta,
-    type IAccountSignerMeta,
-    type IInstruction,
-    type IInstructionWithAccounts,
-    type IInstructionWithData,
+    type FixedSizeCodec,
+    type FixedSizeDecoder,
+    type FixedSizeEncoder,
+    type Instruction,
+    type InstructionWithAccounts,
+    type InstructionWithData,
     type ReadonlyAccount,
     type ReadonlySignerAccount,
+    type ReadonlyUint8Array,
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
@@ -33,7 +34,7 @@ import { findGlobalAdminPda } from '../pdas';
 import { TESTUDO_BONDS_PROGRAM_ADDRESS } from '../programs';
 import {
     getAccountMetaFactory,
-    type IInstructionWithByteDelta,
+    type InstructionWithByteDelta,
     type ResolvedAccount,
 } from '../shared';
 
@@ -45,34 +46,34 @@ export function getInitializeAdminDiscriminatorBytes() {
 
 export type InitializeAdminInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountGlobalAdmin extends string | IAccountMeta<string> = string,
-    TAccountAuthority extends string | IAccountMeta<string> = string,
-    TAccountRewardsPoolAta extends string | IAccountMeta<string> = string,
-    TAccountTreasury extends string | IAccountMeta<string> = string,
-    TAccountTreasuryAta extends string | IAccountMeta<string> = string,
-    TAccountTeam extends string | IAccountMeta<string> = string,
-    TAccountTeamAta extends string | IAccountMeta<string> = string,
-    TAccountNativeTokenMint extends string | IAccountMeta<string> = string,
+    TAccountGlobalAdmin extends string | AccountMeta<string> = string,
+    TAccountAuthority extends string | AccountMeta<string> = string,
+    TAccountRewardsPoolAta extends string | AccountMeta<string> = string,
+    TAccountTreasury extends string | AccountMeta<string> = string,
+    TAccountTreasuryAta extends string | AccountMeta<string> = string,
+    TAccountTeam extends string | AccountMeta<string> = string,
+    TAccountTeamAta extends string | AccountMeta<string> = string,
+    TAccountNativeTokenMint extends string | AccountMeta<string> = string,
     TAccountSystemProgram extends
         | string
-        | IAccountMeta<string> = '11111111111111111111111111111111',
+        | AccountMeta<string> = '11111111111111111111111111111111',
     TAccountTokenProgram extends
         | string
-        | IAccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+        | AccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
     TAccountAssociatedTokenProgram extends
         | string
-        | IAccountMeta<string> = string,
-    TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
-> = IInstruction<TProgram> &
-    IInstructionWithData<Uint8Array> &
-    IInstructionWithAccounts<
+        | AccountMeta<string> = string,
+    TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+> = Instruction<TProgram> &
+    InstructionWithData<ReadonlyUint8Array> &
+    InstructionWithAccounts<
         [
             TAccountGlobalAdmin extends string
                 ? WritableAccount<TAccountGlobalAdmin>
                 : TAccountGlobalAdmin,
             TAccountAuthority extends string
                 ? ReadonlySignerAccount<TAccountAuthority> &
-                      IAccountSignerMeta<TAccountAuthority>
+                      AccountSignerMeta<TAccountAuthority>
                 : TAccountAuthority,
             TAccountRewardsPoolAta extends string
                 ? WritableAccount<TAccountRewardsPoolAta>
@@ -109,18 +110,18 @@ export type InitializeAdminInstructionData = { discriminator: number };
 
 export type InitializeAdminInstructionDataArgs = {};
 
-export function getInitializeAdminInstructionDataEncoder(): Encoder<InitializeAdminInstructionDataArgs> {
+export function getInitializeAdminInstructionDataEncoder(): FixedSizeEncoder<InitializeAdminInstructionDataArgs> {
     return transformEncoder(
         getStructEncoder([['discriminator', getU8Encoder()]]),
         (value) => ({ ...value, discriminator: INITIALIZE_ADMIN_DISCRIMINATOR })
     );
 }
 
-export function getInitializeAdminInstructionDataDecoder(): Decoder<InitializeAdminInstructionData> {
+export function getInitializeAdminInstructionDataDecoder(): FixedSizeDecoder<InitializeAdminInstructionData> {
     return getStructDecoder([['discriminator', getU8Decoder()]]);
 }
 
-export function getInitializeAdminInstructionDataCodec(): Codec<
+export function getInitializeAdminInstructionDataCodec(): FixedSizeCodec<
     InitializeAdminInstructionDataArgs,
     InitializeAdminInstructionData
 > {
@@ -210,7 +211,7 @@ export async function getInitializeAdminInstructionAsync<
         TAccountTokenProgram,
         TAccountAssociatedTokenProgram
     > &
-        IInstructionWithByteDelta
+        InstructionWithByteDelta
 > {
     // Program address.
     const programAddress =
@@ -380,7 +381,7 @@ export function getInitializeAdminInstruction<
     TAccountTokenProgram,
     TAccountAssociatedTokenProgram
 > &
-    IInstructionWithByteDelta {
+    InstructionWithByteDelta {
     // Program address.
     const programAddress =
         config?.programAddress ?? TESTUDO_BONDS_PROGRAM_ADDRESS;
@@ -469,7 +470,7 @@ export function getInitializeAdminInstruction<
 
 export type ParsedInitializeAdminInstruction<
     TProgram extends string = typeof TESTUDO_BONDS_PROGRAM_ADDRESS,
-    TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
     programAddress: Address<TProgram>;
     accounts: {
@@ -501,11 +502,11 @@ export type ParsedInitializeAdminInstruction<
 
 export function parseInitializeAdminInstruction<
     TProgram extends string,
-    TAccountMetas extends readonly IAccountMeta[],
+    TAccountMetas extends readonly AccountMeta[],
 >(
-    instruction: IInstruction<TProgram> &
-        IInstructionWithAccounts<TAccountMetas> &
-        IInstructionWithData<Uint8Array>
+    instruction: Instruction<TProgram> &
+        InstructionWithAccounts<TAccountMetas> &
+        InstructionWithData<ReadonlyUint8Array>
 ): ParsedInitializeAdminInstruction<TProgram, TAccountMetas> {
     if (instruction.accounts.length < 11) {
         // TODO: Coded error.

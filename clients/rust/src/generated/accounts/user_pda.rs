@@ -17,9 +17,11 @@ pub struct UserPda {
 pub user: Pubkey,
 pub bond_count: u8,
 pub total_accrued_rewards: u64,
-pub active_bonds: Vec<(u8, Pubkey)>,
 pub bond_index: u8,
+pub active_bonds: Vec<(u8, Pubkey)>,
 }
+
+
 
 
 impl UserPda {

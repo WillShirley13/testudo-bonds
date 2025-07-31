@@ -1,6 +1,6 @@
 {
   "version": "0.0.0",
-  "name": "testudo_testudo_bonds",
+  "name": "testudo_bonds",
   "instructions": [
     {
       "name": "InitializeAdmin",
@@ -458,6 +458,10 @@
             "type": "u64"
           },
           {
+            "name": "bondIndex",
+            "type": "u8"
+          },
+          {
             "name": "activeBonds",
             "type": {
               "vec": {
@@ -467,10 +471,6 @@
                 ]
               }
             }
-          },
-          {
-            "name": "bondIndex",
-            "type": "u8"
           }
         ]
       }

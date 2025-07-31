@@ -1,4 +1,4 @@
-import test from 'ava';
+import { test, expect } from 'vitest';
 
 import * as sdk from '../src/index.js';
 import {
@@ -28,11 +28,12 @@ import { getCreateAccountInstruction } from '@solana-program/system';
 
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
-
 async function getRpcs() {
-    // Setup local connection (assuming local validator is running)
+    // Setup local connection (assuming local validator is running)how to renam
     const rpc = createSolanaRpc('http://127.0.0.1:8899');
-    const rpcSubscriptions = createSolanaRpcSubscriptions('ws://127.0.0.1:8900');
+    const rpcSubscriptions = createSolanaRpcSubscriptions(
+        'ws://127.0.0.1:8900'
+    );
     return { rpc, rpcSubscriptions };
 }
 
@@ -48,29 +49,37 @@ async function fundKeypairs(
         .requestAirdrop(
             authorityKeypair.address,
             lamports(BigInt(2 * LAMPORTS_PER_SOL)),
-            { commitment: "confirmed"}
+            { commitment: 'confirmed' }
         )
         .send();
     const airdropResponse2 = await rpc
         .requestAirdrop(
             treasuryKeypair.address,
             lamports(BigInt(LAMPORTS_PER_SOL)),
-            { commitment: "confirmed"}
+            { commitment: 'confirmed' }
         )
         .send();
     const airdropResponse3 = await rpc
-        .requestAirdrop(teamKeypair.address, lamports(BigInt(LAMPORTS_PER_SOL)), { commitment: "confirmed"})
+        .requestAirdrop(
+            teamKeypair.address,
+            lamports(BigInt(LAMPORTS_PER_SOL)),
+            { commitment: 'confirmed' }
+        )
         .send();
     const airdropResponse4 = await rpc
-        .requestAirdrop(userKeypair.address, lamports(BigInt(LAMPORTS_PER_SOL)), { commitment: "confirmed"})
+        .requestAirdrop(
+            userKeypair.address,
+            lamports(BigInt(LAMPORTS_PER_SOL)),
+            { commitment: 'confirmed' }
+        )
         .send();
-    
+
     // confirm all airdrops in parallel
     await Promise.all([
         confirmSignature(rpc, airdropResponse),
-        confirmSignature(rpc, airdropResponse2), 
+        confirmSignature(rpc, airdropResponse2),
         confirmSignature(rpc, airdropResponse3),
-        confirmSignature(rpc, airdropResponse4)
+        confirmSignature(rpc, airdropResponse4),
     ]);
 
     console.log('Funded keypairs');
@@ -78,18 +87,25 @@ async function fundKeypairs(
 
 async function confirmSignature(rpc: any, signature: string) {
     while (true) {
-        const { value: [status] } = await rpc.getSignatureStatuses([signature]).send();
-        
+        const {
+            value: [status],
+        } = await rpc.getSignatureStatuses([signature]).send();
+
         if (status) {
             if (status.err) {
-                throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+                throw new Error(
+                    `Transaction failed: ${JSON.stringify(status.err)}`
+                );
             }
-            if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+            if (
+                status.confirmationStatus === 'confirmed' ||
+                status.confirmationStatus === 'finalized'
+            ) {
                 return; // confirmed!
             }
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 500)); // wait 500ms
+
+        await new Promise((resolve) => setTimeout(resolve, 500)); // wait 500ms
     }
 }
 
@@ -112,7 +128,6 @@ async function testInitializeAdmin() {
         userKeypair
     );
 
-
     // Create the mint
     const space = BigInt(getMintSize());
     const rent = await rpc.getMinimumBalanceForRentExemption(space).send();
@@ -122,14 +137,14 @@ async function testInitializeAdmin() {
         newAccount: mintKeypair,
         lamports: rent,
         space,
-        programAddress: TOKEN_PROGRAM_ADDRESS
+        programAddress: TOKEN_PROGRAM_ADDRESS,
     });
 
     const initializeMintInstruction = getInitializeMintInstruction({
         mint: mint,
         decimals: 9,
         mintAuthority: authorityKeypair.address,
-        freezeAuthority: authorityKeypair.address
+        freezeAuthority: authorityKeypair.address,
     });
 
     // Build and send create mint tx
@@ -139,12 +154,21 @@ async function testInitializeAdmin() {
     const createMintTxMessage = pipe(
         createTransactionMessage({ version: 0 }),
         (tx) => setTransactionMessageFeePayerSigner(authorityKeypair, tx),
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-        (tx) => appendTransactionMessageInstructions([createAccountInstruction, initializeMintInstruction], tx),
+        (tx) =>
+            setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        (tx) =>
+            appendTransactionMessageInstructions(
+                [createAccountInstruction, initializeMintInstruction],
+                tx
+            )
     );
 
-    const signedCreateMintTx = await signTransactionMessageWithSigners(createMintTxMessage);
-    const sendAndConfirm = sendAndConfirmTransactionFactory({ rpc, rpcSubscriptions });
+    const signedCreateMintTx =
+        await signTransactionMessageWithSigners(createMintTxMessage);
+    const sendAndConfirm = sendAndConfirmTransactionFactory({
+        rpc,
+        rpcSubscriptions,
+    });
     try {
         await sendAndConfirm(signedCreateMintTx, { commitment: 'confirmed' });
     } catch (error) {
@@ -155,42 +179,6 @@ async function testInitializeAdmin() {
     // Derive PDAs
     const globalAdmin = (await sdk.findGlobalAdminPda())[0];
     console.log('Global admin:', globalAdmin);
-
-    // // Create ATAs
-    // const createRewardsPoolAta = await getCreateAssociatedTokenInstructionAsync({
-    //     payer: authorityKeypair,
-    //     mint: mint,
-    //     owner: globalAdmin
-    // });
-
-    // const createTreasuryAta = await getCreateAssociatedTokenInstructionAsync({
-    //     payer: authorityKeypair,
-    //     mint: mint,
-    //     owner: treasuryKeypair.address
-    // });
-
-    // const createTeamAta = await getCreateAssociatedTokenInstructionAsync({
-    //     payer: authorityKeypair,
-    //     mint: mint,
-    //     owner: teamKeypair.address
-    // });
-
-    // Build and send create ATAs tx
-    // const createAtasTxMessage = pipe(
-    //     createTransactionMessage({ version: 0 }),
-    //     (tx) => appendTransactionMessageInstruction(createRewardsPoolAta, tx),
-    //     (tx) => appendTransactionMessageInstruction(createTreasuryAta, tx),
-    //     (tx) => appendTransactionMessageInstruction(createTeamAta, tx),
-    //     (tx) => setTransactionMessageFeePayer(authorityKeypair.address, tx),
-    //     (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx)
-    // );
-
-    // const signedCreateAtasTx = await signTransactionMessageWithSigners(
-    //     createAtasTxMessage,
-    //     [authorityKeypair],
-    // );
-    // await sendAndConfirm(signedCreateAtasTx, { commitment: 'confirmed' });
-    // console.log('ATAs created');
 
     // Get ATAs
     const [rewardsPoolAta] = await findAssociatedTokenPda({
@@ -239,13 +227,13 @@ async function testInitializeAdmin() {
         (tx) => setTransactionMessageFeePayer(authorityKeypair.address, tx),
 
         // 4. Set the blockhash for transaction lifetime
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash2, tx)
+        (tx) =>
+            setTransactionMessageLifetimeUsingBlockhash(latestBlockhash2, tx)
     );
 
     // Sign the transaction
-    const signedTransaction = await signTransactionMessageWithSigners(
-        transactionMessage
-    );
+    const signedTransaction =
+        await signTransactionMessageWithSigners(transactionMessage);
 
     // Send and confirm
     const sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
@@ -261,6 +249,60 @@ async function testInitializeAdmin() {
 
     const admin = await sdk.fetchGlobalAdmin(rpc, globalAdmin);
     console.log('Admin:', admin);
+
+    try {
+        // Create the instruction
+        const instruction = await sdk.getInitializeAdminInstructionAsync({
+            authority: authorityKeypair,
+            rewardsPoolAta: rewardsPoolAta,
+            treasury: treasuryKeypair.address,
+            treasuryAta: treasuryAta,
+            team: teamKeypair.address,
+            teamAta: teamAta,
+            nativeTokenMint: mint,
+            associatedTokenProgram:
+                'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address,
+        });
+        console.log('Instruction:', instruction);
+
+        // Get recent blockhash
+        const latestBlockhashResponse2 = await rpc.getLatestBlockhash().send();
+        const latestBlockhash2 = latestBlockhashResponse2.value;
+
+        // Build transaction using pipe()
+        const transactionMessage = pipe(
+            // 1. Start with empty transaction message
+            createTransactionMessage({ version: 0 }),
+
+            // 2. Add the instruction
+            (tx) => appendTransactionMessageInstructions([instruction], tx),
+
+            // 3. Set the fee payer
+            (tx) => setTransactionMessageFeePayer(authorityKeypair.address, tx),
+
+            // 4. Set the blockhash for transaction lifetime
+            (tx) =>
+                setTransactionMessageLifetimeUsingBlockhash(
+                    latestBlockhash2,
+                    tx
+                )
+        );
+
+        // Sign the transaction
+        const signedTransaction =
+            await signTransactionMessageWithSigners(transactionMessage);
+
+        // Send and confirm
+        const sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
+            rpc,
+            rpcSubscriptions,
+        });
+        await sendAndConfirmTransaction(signedTransaction, {
+            commitment: 'confirmed',
+        });
+    } catch (error) {
+        console.error('Error initializing admin:', error);
+    }
 }
 
 // Example: Create user
@@ -304,24 +346,26 @@ async function testInitializeAdmin() {
 // console.log('Create User Tx:', signature);
 // }
 
-// Run tests using AVA
-test('Initialize Admin', async (t) => {
+// Run tests using Vitest
+test('Initialize Admin', async () => {
     console.log('------------Initializing admin------------');
     try {
         await testInitializeAdmin();
-        t.pass('Initialize admin completed successfully');
+        expect(true).toBe(true); // Test passed
     } catch (error) {
         console.error('Test failed:', error);
-        t.fail(`Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(
+            `Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
     }
 });
 
-// test('Create User', async (t) => {
+// test('Create User', async () => {
 //     await testCreateUser();
-//     t.pass('Create user completed successfully');
+//     expect(true).toBe(true); // Test passed
 // });
 
 // Simple test that doesn't require validator connection
-test('Basic SDK import test', (t) => {
-    t.truthy(sdk, 'SDK is imported successfully');
+test('Basic SDK import test', () => {
+    expect(sdk).toBeTruthy();
 });

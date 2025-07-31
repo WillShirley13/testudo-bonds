@@ -9,7 +9,3 @@
 export * from './bond';
 export * from './globalAdmin';
 export * from './userPda';
-
-// Export size functions explicitly
-export { getUserPdaSize } from './userPda';
-export { getGlobalAdminSize } from './globalAdmin';

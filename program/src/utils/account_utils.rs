@@ -1,6 +1,15 @@
 use crate::error::TestudoBondsError;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::{invoke, invoke_signed}, program_error::ProgramError, pubkey::Pubkey, rent::Rent, sysvar::Sysvar, system_program::ID as system_program_id
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    pubkey::Pubkey,
+    rent::Rent,
+    system_program::{
+        instruction as system_instruction, ID as system_program_id,
+    },
+    sysvar::Sysvar,
 };
 use solana_system_interface::instruction;
 
@@ -44,13 +53,19 @@ pub fn realloc_account<'a>(
     refund: bool,
 ) -> ProgramResult {
     let rent = Rent::get()?;
-    let old_minimum_balance = rent.minimum_balance(target_account.data_len());
+    let old_minimum_balance =
+        rent.minimum_balance(target_account.data_len());
     let new_minimum_balance = rent.minimum_balance(new_size);
-    let lamports_diff = new_minimum_balance.abs_diff(old_minimum_balance);
+    let lamports_diff =
+        new_minimum_balance.abs_diff(old_minimum_balance);
 
     if new_minimum_balance > old_minimum_balance {
         invoke(
-            &instruction::transfer(funding_account.key, target_account.key, lamports_diff),
+            &instruction::transfer(
+                funding_account.key,
+                target_account.key,
+                lamports_diff,
+            ),
             &[
                 funding_account.clone(),
                 target_account.clone(),
@@ -58,7 +73,11 @@ pub fn realloc_account<'a>(
             ],
         )?;
     } else if refund {
-        transfer_lamports_from_pdas(target_account, funding_account, lamports_diff)?;
+        transfer_lamports_from_pdas(
+            target_account,
+            funding_account,
+            lamports_diff,
+        )?;
     }
 
     target_account.resize(new_size)
@@ -71,9 +90,10 @@ pub fn close_account<'a>(
     receiving_account: &AccountInfo<'a>,
 ) -> ProgramResult {
     let dest_starting_lamports = receiving_account.lamports();
-    **receiving_account.lamports.borrow_mut() = dest_starting_lamports
-        .checked_add(target_account.lamports())
-        .unwrap();
+    **receiving_account.lamports.borrow_mut() =
+        dest_starting_lamports
+            .checked_add(target_account.lamports())
+            .unwrap();
     **target_account.lamports.borrow_mut() = 0;
 
     target_account.assign(&system_program_id);
@@ -103,12 +123,46 @@ pub fn transfer_lamports_from_pdas<'a>(
     **from.lamports.borrow_mut() = from
         .lamports()
         .checked_sub(lamports)
-        .ok_or::<ProgramError>(TestudoBondsError::NumericalOverflow.into())?;
+        .ok_or::<ProgramError>(
+            TestudoBondsError::NumericalOverflow.into(),
+        )?;
 
-    **to.lamports.borrow_mut() = to
-        .lamports()
-        .checked_add(lamports)
-        .ok_or::<ProgramError>(TestudoBondsError::NumericalOverflow.into())?;
+    **to.lamports.borrow_mut() =
+        to.lamports().checked_add(lamports).ok_or::<ProgramError>(
+            TestudoBondsError::NumericalOverflow.into(),
+        )?;
+
+    Ok(())
+}
+
+pub fn realloc_account<'a>(
+    account: &AccountInfo<'a>,
+    payer: &AccountInfo<'a>,
+    system_program: &AccountInfo<'a>,
+    new_size: usize,
+) -> ProgramResult {
+    let rent = Rent::get()?;
+    let new_minimum_balance = rent.minimum_balance(new_size);
+    let current_balance = account.lamports();
+
+    // Calculate additional lamports needed for rent exemption
+    if new_minimum_balance > current_balance {
+        let lamports_diff =
+            new_minimum_balance.saturating_sub(current_balance);
+
+        // Transfer additional lamports from payer to account
+        invoke(
+            &system_instruction::transfer(
+                payer.key,
+                account.key,
+                lamports_diff,
+            ),
+            &[payer.clone(), account.clone(), system_program.clone()],
+        )?;
+    }
+
+    // Realloc the account to new size
+    account.realloc(new_size, false)?;
 
     Ok(())
 }

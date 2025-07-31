@@ -6,11 +6,18 @@ use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
 pub trait Serialization<T> {
-    fn serialize_account_data(&self, account_info: &AccountInfo) -> ProgramResult;
-    fn deserialize_account_data(data: &[u8]) -> Result<T, ProgramError>;
+    fn serialize_account_data(
+        &self,
+        account_info: &AccountInfo,
+    ) -> ProgramResult;
+    fn deserialize_account_data(
+        data: &[u8],
+    ) -> Result<T, ProgramError>;
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount)]
+#[derive(
+    BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount,
+)]
 pub struct Admin {
     pub authority: Pubkey,
     pub treasury: Pubkey,
@@ -26,49 +33,76 @@ pub struct Admin {
 }
 
 impl Admin {
-    pub const SIZE: usize = 32 + 32 + 32 + 32 + 32 + 8 + 8 + 1 + (3 * 2) + 2 + 1;
+    pub const SIZE: usize =
+        32 + 32 + 32 + 32 + 32 + 8 + 8 + 1 + (3 * 2) + 2 + 1;
 }
 
 impl Serialization<Admin> for Admin {
-    fn serialize_account_data(&self, account_info: &AccountInfo) -> ProgramResult {
+    fn serialize_account_data(
+        &self,
+        account_info: &AccountInfo,
+    ) -> ProgramResult {
         self.serialize(&mut &mut account_info.data.borrow_mut()[..])?;
         Ok(())
     }
 
-    fn deserialize_account_data(data: &[u8]) -> Result<Admin, ProgramError> {
-        let data: Admin =
-            Admin::try_from_slice(data).map_err(|_| ProgramError::InvalidAccountData)?;
+    fn deserialize_account_data(
+        data: &[u8],
+    ) -> Result<Admin, ProgramError> {
+        let data: Admin = Admin::try_from_slice(data)
+            .map_err(|_| ProgramError::InvalidAccountData)?;
         Ok(data)
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount)]
+#[derive(
+    BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount,
+)]
 pub struct UserAccount {
     pub user: Pubkey,
-    pub bond_count: u8,                  // Number of bonds the user currently has.
-    pub total_accrued_rewards: u64,      // 9 decimals
+    pub bond_count: u8, // Number of bonds the user currently has.
+    pub total_accrued_rewards: u64, // 9 decimals
+    pub bond_index: u8, // Index of the next bond to be created.
     pub active_bonds: Vec<(u8, Pubkey)>, // (bond_index, bond_pda)
-    pub bond_index: u8,                  // Index of the next bond to be created.
 }
 
 impl UserAccount {
-    pub const SIZE: usize = 32 + 1 + 8 + (4 + (10 * (32 + 1))) + 1;
+    pub const MAX_SIZE: usize = 32 + 1 + 8 + 1 + 4 + (10 * (1 + 32));
+    pub const INITIAL_SIZE: usize = 32 + 1 + 8 + 1 + 4;
+    pub const BOND_ENTRY_SIZE: usize = 1 + 32; // bond_index(1) + bond_pda(32)
 }
 
 impl Serialization<UserAccount> for UserAccount {
-    fn serialize_account_data(&self, account_info: &AccountInfo) -> ProgramResult {
+    fn serialize_account_data(
+        &self,
+        account_info: &AccountInfo,
+    ) -> ProgramResult {
         self.serialize(&mut &mut account_info.data.borrow_mut()[..])?;
         Ok(())
     }
 
-    fn deserialize_account_data(data: &[u8]) -> Result<UserAccount, ProgramError> {
-        let data: UserAccount =
-            UserAccount::try_from_slice(data).map_err(|_| ProgramError::InvalidAccountData)?;
-        Ok(data)
+    fn deserialize_account_data(
+        data: &[u8],
+    ) -> Result<UserAccount, ProgramError> {
+        // Standard deserialization - works for both new (INITIAL_SIZE) and old accounts
+        UserAccount::try_from_slice(data)
+            .map_err(|_| ProgramError::InvalidAccountData)
     }
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount)]
+impl UserAccount {
+    pub fn get_size(&self) -> usize {
+        let mut size = UserAccount::INITIAL_SIZE;
+        for (_bond_index, _) in &self.active_bonds {
+            size += 1 + 32;
+        }
+        size
+    }
+}
+
+#[derive(
+    BorshDeserialize, BorshSerialize, Clone, Debug, ShankAccount,
+)]
 pub struct Bond {
     pub owner: Pubkey,
     pub bond_index: u8,
@@ -84,14 +118,19 @@ impl Bond {
 }
 
 impl Serialization<Bond> for Bond {
-    fn serialize_account_data(&self, account_info: &AccountInfo) -> ProgramResult {
+    fn serialize_account_data(
+        &self,
+        account_info: &AccountInfo,
+    ) -> ProgramResult {
         self.serialize(&mut &mut account_info.data.borrow_mut()[..])?;
         Ok(())
     }
 
-    fn deserialize_account_data(data: &[u8]) -> Result<Bond, ProgramError> {
-        let data: Bond =
-            Bond::try_from_slice(data).map_err(|_| ProgramError::InvalidAccountData)?;
+    fn deserialize_account_data(
+        data: &[u8],
+    ) -> Result<Bond, ProgramError> {
+        let data: Bond = Bond::try_from_slice(data)
+            .map_err(|_| ProgramError::InvalidAccountData)?;
         Ok(data)
     }
 }

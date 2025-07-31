@@ -458,6 +458,10 @@
             "type": "u64"
           },
           {
+            "name": "bondIndex",
+            "type": "u8"
+          },
+          {
             "name": "activeBonds",
             "type": {
               "vec": {
@@ -467,10 +471,6 @@
                 ]
               }
             }
-          },
-          {
-            "name": "bondIndex",
-            "type": "u8"
           }
         ]
       }

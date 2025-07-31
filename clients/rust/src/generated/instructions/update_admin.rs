@@ -8,6 +8,8 @@
 use borsh::BorshSerialize;
 use borsh::BorshDeserialize;
 
+pub const UPDATE_ADMIN_DISCRIMINATOR: u8 = 4;
+
 /// Accounts.
 #[derive(Debug)]
 pub struct UpdateAdmin {
