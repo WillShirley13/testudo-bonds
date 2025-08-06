@@ -54,10 +54,6 @@ export type UserPdaArgs = {
     activeBonds: Array<readonly [number, Address]>;
 };
 
-export function getUserPdaSize(): number {
-    return 32 + 1 + 8 + 1 + 4;
-}
-
 export function getUserPdaEncoder(): Encoder<UserPdaArgs> {
     return getStructEncoder([
         ['user', getAddressEncoder()],

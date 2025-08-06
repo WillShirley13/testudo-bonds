@@ -15,22 +15,22 @@ import {
     type Encoder,
 } from '@solana/kit';
 import {
-    getGlobalAdminDecoder,
-    getGlobalAdminEncoder,
-    type GlobalAdmin as Admin,
-    type GlobalAdminArgs as AdminArgs,
-} from '../accounts';
+    getAdminDecoder,
+    getAdminEncoder,
+    type Admin,
+    type AdminArgs,
+} from '.';
 
 export type UpdateAdminPayload = { newAdminData: Admin };
 
 export type UpdateAdminPayloadArgs = { newAdminData: AdminArgs };
 
 export function getUpdateAdminPayloadEncoder(): Encoder<UpdateAdminPayloadArgs> {
-    return getStructEncoder([['newAdminData', getGlobalAdminEncoder()]]);
+    return getStructEncoder([['newAdminData', getAdminEncoder()]]);
 }
 
 export function getUpdateAdminPayloadDecoder(): Decoder<UpdateAdminPayload> {
-    return getStructDecoder([['newAdminData', getGlobalAdminDecoder()]]);
+    return getStructDecoder([['newAdminData', getAdminDecoder()]]);
 }
 
 export function getUpdateAdminPayloadCodec(): Codec<

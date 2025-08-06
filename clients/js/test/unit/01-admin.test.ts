@@ -299,7 +299,7 @@ describe('Admin tests', async () => {
         }
     });
 
-    it('Should fail when attempting to reinitialize Admin PDA', async () => {
+    it('Should fail when attempting to reinitialize Admin PDA with true authority', async () => {
         let initAdminIx = await sdk.getInitializeAdminInstructionAsync({
             authority: adminAuthority,
             rewardsPoolAta: rewardsPoolAta,
@@ -345,8 +345,127 @@ describe('Admin tests', async () => {
         }
     });
 
-    it('Should fail when attempting to update admin with invalid authority ', async () => {
+    it('Should fail when attempting to reinitialize Admin PDA with false authority', async () => {
         let invalidAuthority = await generateKeyPairSigner();
+        console.log('False admin authority: ', invalidAuthority.address);
+        console.log('Admin authority: ', adminAuthority.address);
+        await fundKeypair(invalidAuthority, 1);
+
+        let initAdminIx = await sdk.getInitializeAdminInstructionAsync({
+            authority: invalidAuthority,
+            rewardsPoolAta: rewardsPoolAta,
+            treasury: treasuryKeypair.address,
+            treasuryAta: treasuryAta,
+            team: teamKeypair.address,
+            teamAta: teamAta,
+            nativeTokenMint: mintKeypair.address,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+        });
+
+        let blockhash = (await rpc.getLatestBlockhash().send()).value;
+
+        let transactionMsg = pipe(
+            createTransactionMessage({ version: 0 }),
+            (tx) => setTransactionMessageFeePayer(invalidAuthority.address, tx),
+            (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
+            (tx) => appendTransactionMessageInstruction(initAdminIx, tx)
+        );
+
+        console.log('📤 Sending transaction...');
+        try {
+            let transactionSig =
+                await signTransactionMessageWithSigners(transactionMsg);
+
+            let sendAndConfirm = sendAndConfirmTransactionFactory({
+                rpc,
+                rpcSubscriptions,
+            });
+            await sendAndConfirm(transactionSig, {
+                commitment: 'confirmed',
+            });
+            expect.fail('Admin init instruction should have failed');
+        } catch (error: any) {
+            console.error(
+                'Transaction failed (as intended) with detailed error:'
+            );
+            console.error('Error type:', error.constructor.name);
+            console.error('Error message:', error.message);
+            console.error('Error context:', error.context);
+            expect(error).toBeDefined();
+        }
+    });
+
+    it('Should fail when attempting to update admin with invalid authority - Pass true authority to updateAdminInstructionAsync and pass false authority to signTransactionMessageWithSigners', async () => {
+        let invalidAuthority = await generateKeyPairSigner();
+        console.log('Invalid admin authority: ', invalidAuthority.address);
+        console.log('Admin authority: ', adminAuthority.address);
+        await fundKeypair(invalidAuthority, 1);
+
+        //return a MaybeEncodedAccount, which is a union of EncodedAccount and null
+        let globalAdminPdaAccount: MaybeEncodedAccount =
+            await fetchEncodedAccount(rpc, globalAdminPda);
+        // Check that the account exists. The function will convert the account from a MaybeEncodedAccount to an EncodedAccount (if it exists)
+        assertAccountExists(globalAdminPdaAccount);
+
+        let globalAdminPdaData: sdk.GlobalAdmin = sdk
+            .getGlobalAdminCodec()
+            .decode(globalAdminPdaAccount.data);
+
+        let updatedGlobalAdminDataEncoded = sdk.getGlobalAdminEncoder().encode({
+            ...globalAdminPdaData,
+            maxBondsPerWallet: 100,
+        });
+
+        let updateAdminIx = await sdk.getUpdateAdminInstructionAsync({
+            authority: adminAuthority,
+        });
+        updateAdminIx = {
+            ...updateAdminIx,
+            data: new Uint8Array([
+                ...updateAdminIx.data,
+                ...updatedGlobalAdminDataEncoded,
+            ]),
+        };
+
+        let blockhash = (await rpc.getLatestBlockhash().send()).value;
+
+        let transactionMsg = pipe(
+            createTransactionMessage({ version: 0 }),
+            (tx) => setTransactionMessageFeePayer(invalidAuthority.address, tx),
+            (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
+            (tx) => appendTransactionMessageInstruction(updateAdminIx, tx)
+        );
+
+        console.log('📤 Sending transaction...');
+        try {
+            let txSignature =
+                await signTransactionMessageWithSigners(transactionMsg);
+
+            let sendAndConfirm = sendAndConfirmTransactionFactory({
+                rpc,
+                rpcSubscriptions,
+            });
+            await sendAndConfirm(txSignature, {
+                commitment: 'confirmed',
+            });
+            expect.fail(
+                'Updating Admin data with invalid authority should fail'
+            );
+        } catch (error: any) {
+            console.error(
+                'Transaction failed (as intended) with detailed error:'
+            );
+            console.error('Error type:', error.constructor.name);
+            console.error('Error message:', error.message);
+            console.error('Error context:', error.context);
+            expect(error).toBeDefined();
+        }
+    });
+
+    it('Should fail when attempting to update admin with invalid authority - Pass true authority to signTransactionMessageWithSigners and pass false authority to getUpdateAdminInstructionAsync', async () => {
+        let invalidAuthority = await generateKeyPairSigner();
+        console.log('Invalid admin authority: ', invalidAuthority.address);
+        console.log('Admin authority: ', adminAuthority.address);
         await fundKeypair(invalidAuthority, 1);
 
         //return a MaybeEncodedAccount, which is a union of EncodedAccount and null
@@ -379,21 +498,21 @@ describe('Admin tests', async () => {
 
         let transactionMsg = pipe(
             createTransactionMessage({ version: 0 }),
-            (tx) => setTransactionMessageFeePayer(invalidAuthority.address, tx),
+            (tx) => setTransactionMessageFeePayer(adminAuthority.address, tx),
             (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
             (tx) => appendTransactionMessageInstruction(updateAdminIx, tx)
         );
 
-        let txSignature =
+
+        console.log('📤 Sending transaction...');
+        try {
+            let txSignature =
             await signTransactionMessageWithSigners(transactionMsg);
 
         let sendAndConfirm = sendAndConfirmTransactionFactory({
             rpc,
             rpcSubscriptions,
         });
-
-        console.log('📤 Sending transaction...');
-        try {
             await sendAndConfirm(txSignature, {
                 commitment: 'confirmed',
             });
@@ -426,21 +545,64 @@ describe('Admin tests', async () => {
         );
     });
 
-    //     it('should fail with invalid instruction data', async () => {
-    //         // Test parameter validation
-    //         expect(true).toBe(true);
-    //     });
+    it('should fail with invalid instruction data', async () => {
+        //return a MaybeEncodedAccount, which is a union of EncodedAccount and null
+        let globalAdminPdaAccount: MaybeEncodedAccount =
+            await fetchEncodedAccount(rpc, globalAdminPda);
+        // Check that the account exists. The function will convert the account from a MaybeEncodedAccount to an EncodedAccount (if it exists)
+        assertAccountExists(globalAdminPdaAccount);
 
-    //     it('should fail when already initialized', async () => {
-    //         // Test double initialization protection
-    //         expect(true).toBe(true);
-    //     });
+        let globalAdminPdaData: sdk.GlobalAdmin = sdk
+            .getGlobalAdminCodec()
+            .decode(globalAdminPdaAccount.data);
 
-    //     it('should fail with insufficient funds', async () => {
-    //         // Test insufficient lamports for rent exemption
-    //         expect(true).toBe(true);
-    //     });
-    // });
+        let updatedGlobalAdminDataEncoded = sdk.getGlobalAdminEncoder().encode({
+            ...globalAdminPdaData,
+            maxBondsPerWallet: 50
+        });
+
+        let updateAdminIx = await sdk.getUpdateAdminInstructionAsync({
+            authority: adminAuthority,
+        });
+        updateAdminIx = {
+            ...updateAdminIx,
+            data: new Uint8Array([
+                ...updateAdminIx.data,
+                ...updatedGlobalAdminDataEncoded,
+            ]),
+        };
+
+        let blockhash = (await rpc.getLatestBlockhash().send()).value;
+
+        let transactionMsg = pipe(
+            createTransactionMessage({ version: 0 }),
+            (tx) => setTransactionMessageFeePayerSigner(adminAuthority, tx),
+            (tx) => setTransactionMessageLifetimeUsingBlockhash(blockhash, tx),
+            (tx) => appendTransactionMessageInstruction(updateAdminIx, tx)
+        );
+
+        let txSignature =
+            await signTransactionMessageWithSigners(transactionMsg);
+
+        console.log('📤 Sending transaction...');
+        try {
+            let sendAndConfirm = sendAndConfirmTransactionFactory({
+                rpc,
+                rpcSubscriptions,
+            });
+            await sendAndConfirm(txSignature, {
+                commitment: 'confirmed',
+            });
+
+            expect.fail('Transaction should have failed');
+        } catch (error: any) {
+            console.error('Transaction failed (as intended) with detailed error:');
+            console.error('Error type:', error.constructor.name);
+            console.error('Error message:', error.message);
+            console.error('Error context:', error.context);
+            expect(error).toBeDefined();
+        }
+    });
 
     // describe('edge cases', () => {
     //     it('should handle minimum rent exemption', async () => {

@@ -240,20 +240,51 @@ describe('User Instructions', async () => {
     });
 
 
-    it('should validate account ownership', async () => {
+    it('should validate user PDA ownership', async () => {
         const [userPdaAddress] = await sdk.findUserPdaPda({ userWallet: user1.address });
         
         // User PDA should already exist from previous tests, so we'll just validate its ownership
         // Fetch raw account to verify owner
         const rawAccount = await fetchEncodedAccount(rpc, userPdaAddress);
         assertAccountExists(rawAccount);
+
+        const userPda = await sdk.fetchUserPda(rpc, userPdaAddress);
+        console.log('User PDA: ', userPda);
+
+        assertWithLog(userPda.data.user, user1.address, "User PDA owned by correct user");
         
-        // Verify account is owned by the Testudo Bonds program
-        const expectedProgramId = 'AV5obcm5Yavs4EebSrmonAAy2K83NZZK88gUn77wmK2';
-        assertWithLog(rawAccount.programAddress, expectedProgramId, "Account owned by correct program");
-        
-        console.log(`✅ User PDA owned by program: ${rawAccount.programAddress}`);
     });
+
+    it('should validate user PDA bond count', async () => {
+        const [userPdaAddress] = await sdk.findUserPdaPda({ userWallet: user1.address });
+        const userPda = await sdk.fetchUserPda(rpc, userPdaAddress);
+        console.log('User PDA: ', userPda);
+        assertWithLog(userPda.data.bondCount, 0, "User PDA bond count is zero");
+    });
+
+    it('should validate user PDA total accrued rewards', async () => {
+        const [userPdaAddress] = await sdk.findUserPdaPda({ userWallet: user1.address });
+        const userPda = await sdk.fetchUserPda(rpc, userPdaAddress);
+        console.log('User PDA: ', userPda);
+        assertWithLog(userPda.data.totalAccruedRewards, 0n, "User PDA total accrued rewards is zero");
+    });
+
+    it('should validate user PDA bond index', async () => {
+        const [userPdaAddress] = await sdk.findUserPdaPda({ userWallet: user1.address });
+        const userPda = await sdk.fetchUserPda(rpc, userPdaAddress);
+        console.log('User PDA: ', userPda);
+        assertWithLog(userPda.data.bondIndex, 0, "User PDA bond index is zero");
+    });
+
+    it('should validate user PDA active bonds', async () => {
+        const [userPdaAddress] = await sdk.findUserPdaPda({ userWallet: user1.address });
+        const userPda = await sdk.fetchUserPda(rpc, userPdaAddress);
+        console.log('User PDA: ', userPda);
+        assertWithLog(userPda.data.activeBonds.length, 0, "User PDA active bonds array is empty");
+    });
+
+
+
 
 });
     

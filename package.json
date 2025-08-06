@@ -43,6 +43,8 @@
   },
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
-    "@solana-program/system": "^0.7.0"
+    "@solana-program/system": "^0.7.0",
+    "litesvm": "^0.2.0",
+    "solana-bankrun": "^0.4.0"
   }
 }

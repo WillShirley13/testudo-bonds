@@ -29,7 +29,7 @@ import {
     type TransactionSigner,
     type WritableAccount,
 } from '@solana/kit';
-import { fetchUserPda, getBondSize } from '../accounts';
+import { getBondSize } from '../accounts';
 import { findBondPda, findGlobalAdminPda, findUserPdaPda } from '../pdas';
 import { TESTUDO_BONDS_PROGRAM_ADDRESS } from '../programs';
 import {
@@ -251,10 +251,8 @@ export async function getInitializeBondInstructionAsync<
         });
     }
     if (!accounts.bond.value) {
-        const userPdaData = await fetchUserPda(null as any, expectAddress(accounts.userPda.value));
         accounts.bond.value = await findBondPda({
             userPda: expectAddress(accounts.userPda.value),
-            bondIndex: userPdaData.data.bondIndex,
         });
     }
     if (!accounts.globalAdmin.value) {
